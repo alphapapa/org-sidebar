@@ -1,0 +1,205 @@
+* Window management
+
+** Libraries
+
+*** =splitter=
+
+=splitter.el= looks like it may be useful, especially the functions =spl-grid= and =spl-split=.
+
+*** =tile.el=
+
+This also looks like it might be useful, but I don't see any examples, and it doesn't seem obvious how to use it, so some experimentation would be required.
+
+*** =wconf=
+
+This might also be useful.  From its readme:
+
+#+BEGIN_SRC org
+  ,* Concepts
+  The main idea is +stolen from+ inspired by =workgroups=.  We keep a list
+  of configuration pairs.  Each such pair consists of an /active/
+  configuration (what you see when you switch to this slot of the list),
+  and a /stored/ one (what you have in the back, and maybe save to disk at
+  some point).  In =workgroups= parlance, these are the working and base
+  configs.
+
+  At each point in time there is (at most) one configuration current.  You
+  can explictly store and restore the current active configuration to/from
+  the stored one, or do likewise for all configurations.  For example, you
+  might decide that you have a carefully hand-crafted set of
+  configurations that you always want to start from, but that you do not
+  wish to change this setup, except when doing so explicitly.  That's
+  easy: just remove the =(wconf-store-all)= call from the above hook
+  function.
+
+  A nice feature of =wconf= is that it does not alter any hooks or
+  settings outside its own small world, and I intend to keep it that way.
+  This implies that the currently active configuration is only updated
+  explicitly, via one the functions/commands in the package.
+  ,* Rationale, and Other Packages
+  I used https://github.com/tlh/workgroups.el for several years.  It is a
+  great package, which offers a lot of additional features besides the
+  core business of managing window configs.  It also has some
+  shortcomings, is somewhat complex (at 79k), and I occasionally
+  experienced minor glitches.  Most importantly, it has been unmaintained
+  for roughly 4 years now.
+
+  https://github.com/pashinin/workgroups2 promises to pick up where
+  workgroups left, and is actively maintained.  The main difference, as I
+  understand it, is the desire to restore "special" buffers as well (help,
+  info, org-mode agendas, notmuch mail, you name it).  Finally trying it,
+  it did not provide a lot of benefit for my personal needs, but added
+  still more complexity.  The functionality that I want should not require
+  179k of elisp.
+
+  Nowadays (at least since the GNU Emacs 24.4 release), there are proper
+  lisp-reader (de)serializations for both frame and window configurations,
+  and =window.el= and =frameset.el= provide functions to deal with them
+  (relatively) comfortably.  Desktop already (re)stores a single
+  configuration.  That's when I decided that it's time to roll my own:
+  build something light on top of what's already there, in order to
+  provide persistent switchable configurations.
+
+#+END_SRC
+
+*** =window-layout=
+
+This looks like it might do what I need, as it has "recipes":
+
+#+BEGIN_EXAMPLE
+  Split a frame or window into some windows according to a layout
+  recipe.
+
+  Example code
+
+  Layout function
+  -> three pane layout.
+  (setq wm ; <-- window management object
+        (wlf:layout
+         '(| (:left-size-ratio 0.3)
+             folder
+             (- (:upper-max-size 15)
+                summary
+                message))
+         '((:name folder
+            :buffer "folder buffer")
+           (:name summary
+            :buffer "summary buffer")
+           (:name message
+            :buffer "message buffer")
+          )))
+
+  Window controlling
+  (wlf:show    wm 'summary)
+  (wlf:hide    wm 'summary)
+  (wlf:toggle  wm 'summary)
+  (wlf:select  wm 'summary)
+  (wlf:toggle-maximize  wm 'summary)
+
+  Window updating
+  (wlf:refresh wm)
+  (wlf:reset-window-sizes wm)
+  (wlf:reset-init wm)
+
+  Accessing a buffer
+  (wlf:get-buffer wm 'summary) -> <#buffer object>
+  (wlf:set-buffer wm 'summary "*scratch*")
+
+  Accessing a window
+  (wlf:get-window wm 'summary)
+
+  Layout hook
+  (defun wlf:test-hook (wset) (message "HOOK : %s" wset))
+  (wlf:layout-hook-add wm 'wlf:test-hook)
+  (wlf:layout-hook-remove wm 'wlf:test-hook)
+
+  `wlf:layout' function
+
+  ,* Layout recipe:
+
+  ( (split type) (split option)
+                 (left window name or recipe)
+                 (right window name or recipe) )
+
+    - : split vertically
+    | : split horizontally
+
+  split option (the prefix 'left' can be replaced by 'right', 'upper' and 'lower'.)
+    :left-size  (column or row number) window size
+    :left-max-size  (column or row number) if window size is larger than this value, the window is shrunken.
+    :left-size-ratio  (0.0 - 1.0) window size ratio. the size of the other side is the rest.
+
+  Note:
+  The split option can be omitted.
+  The size parameters, :size, :max-size and :size-ratio, are mutually
+  exclusive.  The size of a window is related with one of the other
+  side window. So, if both side windows set size parameters, the
+  window size may not be adjusted as you write.
+
+  ,* Window options:
+
+    :name  [*] the window name.
+    :buffer  a buffer name or a buffer object to show the window. If nil or omitted, the current buffer remains. If symbol, it is evaluated as a global variable.
+    :default-hide  (t/nil) if t, the window is hided initially. (default: nil)
+    :fix-size  (t/nil) if t, when the windows are laid out again, the window size is remained. (default: nil)
+
+  ,* subwindow-p option:
+
+  If this option is not nil, this function splits the windows within
+  the current window. If this option is nil or omitted, this function
+  uses the entire space of the current frame. Because some user
+  actions and complicated window layouts may cause unexpected split
+  behaviors, it is easy to use the entire space of a frame.
+
+  ,* Return value (Window management object):
+
+  You should not access the management object directly, because it is not
+  intended direct access.
+  You can make some management objects to switch the window layout.
+
+  ,* Layout hook
+
+  After splitting windows, registered hook are called with one
+  argument, the window management object.
+#+END_EXAMPLE
+
+*** =window-purpose=
+
+This looks like it might be useful too:
+
+#+BEGIN_EXAMPLE
+  ---------------------------------------------------------------------
+  Full information can be found on GitHub:
+  https://github.com/bmag/emacs-purpose/wiki
+  ---------------------------------------------------------------------
+
+  Purpose is a package that introduces the concept of a "purpose" for
+  windows and buffers, and then helps you maintain a robust window
+  layout easily.
+
+  Installation and Setup:
+  Install Purpose from MELPA, or download it manually from GitHub. If
+  you download manually, add these lines to your init file:
+     (add-to-list 'load-path "/path/to/purpose")
+     (require 'window-purpose)
+  To activate Purpose at start-up, add this line to your init file:
+     (purpose-mode)
+
+  Purpose Configuration:
+  Customize `purpose-user-mode-purposes', `purpose-user-name-purposes',
+  `purpose-user-regexp-purposes' and
+  `purpose-use-default-configuration'.
+
+  Basic Usage:
+  1. Load/Save window/frame layout (see `purpose-load-window-layout',
+     `purpose-save-window-layout', etc.)
+  2. Use regular switch-buffer functions - they will not mess your
+     window layout (Purpose overrides them).
+  3. If you don't want a window's purpose/buffer to change, dedicate
+     the window:
+     C-c , d: `purpose-toggle-window-purpose-dedicated'
+     C-c , D: `purpose-toggle-window-buffer-dedicated'
+  4. To use a switch-buffer function that ignores Purpose, prefix it
+     with C-u. For example, [C-u C-x b] calls
+     `switch-buffer-without-purpose'.
+#+END_EXAMPLE
