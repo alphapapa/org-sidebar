@@ -99,8 +99,8 @@ seeing an overview of tasks in a subtree."
                                                                (get-text-property 0 'deadline item))
                                                            org-sidebar-date-format)
                                      'face '(:inherit variable-pitch :weight bold))))
-    (let* ((file (buffer-file-name (current-buffer)))
-           (agenda-items (--> (org-ql file
+    (let* ((buffer (current-buffer))
+           (agenda-items (--> (org-ql buffer
                                 (and (or (scheduled)
                                          (deadline))
                                      (not (done)))
@@ -108,7 +108,7 @@ seeing an overview of tasks in a subtree."
                                 :narrow t)
                               (-map org-sidebar-format-fn it)
                               (-group-by #'date-header it)))
-           (todo-items (--> (org-ql file
+           (todo-items (--> (org-ql buffer
                               (and (todo)
                                    (not (or (done)
                                             (scheduled)
