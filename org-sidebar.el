@@ -1,12 +1,74 @@
-;; NOTE: Maybe this should be called something like org-agenda-sidebar instead, or just org-sidebar.  Ahh, naming things is hard...
+;;; org-sidebar.el --- Helpful sidebar for Org buffers  -*- lexical-binding: t; -*-
+
+;; Author: Adam Porter <adam@alphapapa.net>
+;; Url: http://github.com/alphapapa/org-sidebar
+;; Version: 0.1-pre
+;; Package-Requires: ((emacs "25.1") (s "1.10.0") (dash "2.13") (org "9.0") (org-ql) (org-agenda-ng))
+;; Keywords: hypermedia, outlines, Org, agenda
+
+;;; Commentary:
+
+;; This package presents a helpful sidebar view for Org buffer.  At the top is a chronological list
+;; of scheduled and deadlined tasks in the current buffer, and below that is a list of all other
+;; non-done to-do items.  If the buffer is narrowed, the sidebar only shows items in the narrowed
+;; portion; this allows seeing an overview of tasks in a subtree.
+
+;; NOTE: This package is in an early stage of development.
+
+;;;; Installation
+
+;; Install the required packages (see the "Package-Requires" line in the headers at the top).
+;; org-ql and org-agenda-ng may be found at <http://github.com/alphapapa/org-agenda-ng>.  Then eval
+;; (require 'org-sidebar).
+
+;;;; Usage
+
+;; In an Org buffer, run the command `org-sidebar'.
+
+;; Customization options are in the `org-sidebar' group.
+
+;;; License:
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Code:
+
+;;;; Requirements
 
 (require 'org)
 
 (require 'dash)
 (require 'dash-functional)
+(require 's)
 
 (require 'org-ql)
 (require 'org-agenda-ng)
+
+;;;; Variables
+
+(defvar org-sidebar-map
+  (let ((map (make-sparse-keymap))
+        (mappings '(
+                    "RET" org-sidebar--jump
+                    "<mouse-1>" org-sidebar--jump
+                    )))
+    (cl-loop for (key fn) on mappings by #'cddr
+             do (define-key map (kbd key) fn))
+    map)
+  "Keymap for `org-sidebar' buffers.")
+
+;;;; Customization
 
 (defgroup org-sidebar nil
   "Options for `org-sidebar'.")
@@ -30,32 +92,15 @@ Takes a single argument: the Org element being formatted.")
     map)
   "Keymap for `org-sidebar' buffers.")
 
-(defun ap/org-sidebar-format-element (element)
-  "Calls `org-agenda-ng--format-element' and adds `variable-pitch' face."
-  (add-face-text-property 0 (length string)
-                          'variable-pitch t
-                          (org-agenda-ng--format-element element)))
-
-(defun org-sidebar--prepare-window (window name contents)
-  "Prepare WINDOW as a sidebar buffer.
-Use NAME and insert CONTENTS."
-  (let ((org-buffer (current-buffer))
-        (org-buffer-window main-window))
-    (with-selected-window window
-      (switch-to-buffer (get-buffer-create (format " *%s*" name)))
-      (setq header-line-format (propertize name
-                                           'face '(:inherit org-agenda-date-today))
-            mode-line-format nil)
-      (set-window-parameter nil 'org-buffer org-buffer)
-      (set-window-parameter nil 'org-buffer-window org-buffer-window)
-      (use-local-map org-sidebar-map)
-      (erase-buffer)
-      (insert contents)
-      (goto-char (point-min))
-      (toggle-truncate-lines 1))))
+;;;; Commands
 
 (defun org-sidebar ()
-  "FIXME"
+  "This package presents a helpful sidebar view for Org buffer.
+At the top is a chronological list of scheduled and deadlined
+tasks in the current buffer, and below that is a list of all
+other non-done to-do items.  If the buffer is narrowed, the
+sidebar only shows items in the narrowed portion; this allows
+seeing an overview of tasks in a subtree."
   (interactive)
   (cl-flet ((date-header (item)
                          (propertize (org-timestamp-format (or (get-text-property 0 'scheduled item)
@@ -68,7 +113,7 @@ Use NAME and insert CONTENTS."
                                    (and (or (scheduled)
                                             (deadline))
                                         (not (done)))
-                                   :sort (date)
+                                   :sort (deadline scheduled priority todo)
                                    :narrow t)))
            (todo-items (mapcar org-sidebar-format-fn
                                (org-ql file
@@ -101,6 +146,26 @@ Use NAME and insert CONTENTS."
         (org-sidebar--prepare-window todo-window (format " %s: Other TODOs" buffer-name-string) todo-string)
 
         (select-window main-window)))))
+
+;;;; Functions
+
+(defun org-sidebar--prepare-window (window name contents)
+  "Prepare WINDOW as a sidebar buffer.
+Use NAME and insert CONTENTS."
+  (let ((org-buffer (current-buffer))
+        (org-buffer-window main-window))
+    (with-selected-window window
+      (switch-to-buffer (get-buffer-create (format " *%s*" name)))
+      (setq header-line-format (propertize name
+                                           'face '(:inherit org-agenda-date-today))
+            mode-line-format nil)
+      (set-window-parameter nil 'org-buffer org-buffer)
+      (set-window-parameter nil 'org-buffer-window org-buffer-window)
+      (use-local-map org-sidebar-map)
+      (erase-buffer)
+      (insert contents)
+      (goto-char (point-min))
+      (toggle-truncate-lines 1))))
 
 (defun org-sidebar--jump ()
   "Jump to entry at sidebar buffer's point in source buffer."

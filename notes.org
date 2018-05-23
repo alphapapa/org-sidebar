@@ -203,3 +203,10 @@ This looks like it might be useful too:
      with C-u. For example, [C-u C-x b] calls
      `switch-buffer-without-purpose'.
 #+END_EXAMPLE
+* Code
+** Testing
+
+#+BEGIN_SRC elisp
+  (org-super-agenda--test-with-org-today-date "2017-07-08 00:00"
+    (org-sidebar))
+#+END_SRC
