@@ -1,0 +1,30 @@
+* org-sidebar
+
+This package presents a helpful sidebar view for Org buffers.  At the top is a chronological list of scheduled and deadlined tasks in the current buffer (similar to the Org agenda ,but without all its features), and below that is a list of all other non-done to-do items.  If the buffer is narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of tasks in a subtree.
+
+Please note: this package is in an early stage of development.
+
+[[screenshot.png]]
+
+** Installation
+
+Install these packages (e.g. from MELPA):
+
++  =dash=
++  =s= 
+
+=org-ql= and =org-agenda-ng= are also required; they are not on MELPA, but may be found at http://github.com/alphapapa/org-agenda-ng.  Put them and this file in your =load-path=.
+
+** Usage
+
+Eval =(require 'org-sidebar)=.  Then, in an Org buffer, run the command =org-sidebar=.
+
+Customization options are in the =org-sidebar= group.
+
+** Notes
+
+This was inspired by [[https://www.reddit.com/r/emacs/comments/88mtrh/emacs_org_mode_with_atom_org_mode_design/][this /r/Emacs post]], which was inspired by [[https://github.com/MattFlower/organized/][Organized for Atom]].
+
+** License
+
+GPLv3.

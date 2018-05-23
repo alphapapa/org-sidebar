@@ -8,22 +8,23 @@
 
 ;;; Commentary:
 
-;; This package presents a helpful sidebar view for Org buffer.  At the top is a chronological list
-;; of scheduled and deadlined tasks in the current buffer, and below that is a list of all other
-;; non-done to-do items.  If the buffer is narrowed, the sidebar only shows items in the narrowed
-;; portion; this allows seeing an overview of tasks in a subtree.
+;; This package presents a helpful sidebar view for Org buffers.  At the top is a chronological list
+;; of scheduled and deadlined tasks in the current buffer (similar to the Org agenda ,but without
+;; all its features), and below that is a list of all other non-done to-do items.  If the buffer is
+;; narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of
+;; tasks in a subtree.
 
 ;; NOTE: This package is in an early stage of development.
 
 ;;;; Installation
 
 ;; Install the required packages (see the "Package-Requires" line in the headers at the top).
-;; org-ql and org-agenda-ng may be found at <http://github.com/alphapapa/org-agenda-ng>.  Then eval
-;; (require 'org-sidebar).
+;; org-ql and org-agenda-ng may be found at <http://github.com/alphapapa/org-agenda-ng>.  Then put
+;; this file in your `load-path'.
 
 ;;;; Usage
 
-;; In an Org buffer, run the command `org-sidebar'.
+;; Eval (require 'org-sidebar).  Then, in an Org buffer, run the command `org-sidebar'.
 
 ;; Customization options are in the `org-sidebar' group.
 
@@ -62,6 +63,7 @@
         (mappings '(
                     "RET" org-sidebar--jump
                     "<mouse-1>" org-sidebar--jump
+                    "g" org-sidebar--update
                     )))
     (cl-loop for (key fn) on mappings by #'cddr
              do (define-key map (kbd key) fn))
@@ -71,7 +73,8 @@
 ;;;; Customization
 
 (defgroup org-sidebar nil
-  "Options for `org-sidebar'.")
+  "Options for `org-sidebar'."
+  :group 'org)
 
 (defcustom org-sidebar-date-format "%e %B %Y"
   "Format string for date headers.
@@ -81,21 +84,10 @@ See `format-time-string'.")
   "Function used to format elements.
 Takes a single argument: the Org element being formatted.")
 
-(defvar org-sidebar-map
-  (let ((map (make-sparse-keymap))
-        (mappings '(
-                    "RET" org-sidebar--jump
-                    "<mouse-1>" org-sidebar--jump
-                    )))
-    (cl-loop for (key fn) on mappings by #'cddr
-             do (define-key map (kbd key) fn))
-    map)
-  "Keymap for `org-sidebar' buffers.")
-
 ;;;; Commands
 
 (defun org-sidebar ()
-  "This package presents a helpful sidebar view for Org buffer.
+  "This package presents a helpful sidebar view for Org buffers.
 At the top is a chronological list of scheduled and deadlined
 tasks in the current buffer, and below that is a list of all
 other non-done to-do items.  If the buffer is narrowed, the
@@ -108,26 +100,28 @@ seeing an overview of tasks in a subtree."
                                                            org-sidebar-date-format)
                                      'face '(:inherit variable-pitch :weight bold))))
     (let* ((file (buffer-file-name (current-buffer)))
-           (agenda-items (mapcar org-sidebar-format-fn
-                                 (org-ql file
-                                   (and (or (scheduled)
-                                            (deadline))
-                                        (not (done)))
-                                   :sort (deadline scheduled priority todo)
-                                   :narrow t)))
-           (todo-items (mapcar org-sidebar-format-fn
-                               (org-ql file
-                                 (and (todo)
-                                      (not (or (done)
-                                               (scheduled)
-                                               (deadline))))
-                                 :sort (todo priority)
-                                 :narrow t)))
+           (agenda-items (--> (org-ql file
+                                (and (or (scheduled)
+                                         (deadline))
+                                     (not (done)))
+                                :sort (deadline scheduled priority todo)
+                                :narrow t)
+                              (-map org-sidebar-format-fn it)
+                              (-group-by #'date-header it)))
+           (todo-items (--> (org-ql file
+                              (and (todo)
+                                   (not (or (done)
+                                            (scheduled)
+                                            (deadline))))
+                              :sort (todo priority)
+                              :narrow t)
+                            (-map org-sidebar-format-fn it)))
            (agenda-string (with-temp-buffer
-                            (--each (-group-by #'date-header agenda-items)
-                              (insert "\n" (car it) "\n\n")
-                              (--each (cdr it)
-                                (insert it "\n")))
+                            (--each agenda-items
+                              (-let (((header . items) it))
+                                (insert "\n" header "\n\n")
+                                (--each items
+                                  (insert it "\n"))))
                             (buffer-string)))
            (todo-string (s-join "\n" todo-items))
            (frame (selected-frame))
@@ -176,6 +170,13 @@ Use NAME and insert CONTENTS."
     (select-window org-buffer-window)
     (goto-char begin)
     (org-reveal)))
+
+(defun org-sidebar--update ()
+  "Update `org-sidebar' buffer."
+  (interactive)
+  (when-let ((org-buffer-window (window-parameter nil 'org-buffer-window)))
+    (select-window org-buffer-window)
+    (org-sidebar)))
 
 ;;;; Footer
 
