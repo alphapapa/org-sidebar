@@ -104,7 +104,7 @@ seeing an overview of tasks in a subtree."
                                 (and (or (scheduled)
                                          (deadline))
                                      (not (done)))
-                                :sort (deadline scheduled priority todo)
+                                :sort (date priority todo)
                                 :narrow t)
                               (-map org-sidebar-format-fn it)
                               (-group-by #'date-header it)))
