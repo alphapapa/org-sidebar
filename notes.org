@@ -1,16 +1,72 @@
-* Window management
 
-** Libraries
 
-*** =splitter=
+* Tasks
+
+** TODO [#A] Document keymap
+
+** TODO [#B] Automatically cleanup old sidebar buffers
+
+e.g. when an Org buffer is closed, any of its sidebar buffers shouldn't be left open.
+
+** TODO [#B] Automatically update sidebars in buffers' =after-save-hook=
+
++  [ ] Add to hook in parent Org buffers when sidebar is opened
++  [ ] Remove from hook when sidebar killed 
+
+** TODO [#B] Improve fontification of tasks
+
+e.g. emphasis like =code= isn't applied, so the raw syntax is visible.
+
+** TODO [#C] Made sidebars more customizable
+
+*** TODO Customizable =org-ql= queries
+
+*** TODO Customizable window/buffer layout
+
+* Ideas
+
+** MAYBE Automatically update sidebar buffers
+
+For small Org buffers, it should be no problem, and might even work on a timer or a hook.  For larger ones, it becomes expensive, and will probably have to be done manually.
+
+It would probably make sense, at least, to update it on the after-save-hook...
+
+** MAYBE Add outline-overview sidebar
+
+e.g. like what I have in my config, aka a minimap
+
+** MAYBE Automatically size windows
+
+e.g. when there are only a few lines in one buffer but many in another, it doesn't make sense for them to be equally sized.
+
+** MAYBE Customizeable grouping
+
+Especially for tasks.  It would be good to have a generalized implementation for grouping, printing items beneath headers, etc.
+
+** MAYBE Automatically switch sidebar buffers when Org buffer changes
+
+e.g. in the current window layout, if the Org buffer displayed in the main window is changed, maybe (optionally) the sidebar buffers should change, too.
+
+** MAYBE More commands for sidebar buffers
+
+e.g. changing TODO keyword, etc.  It would be good to reuse as much Org Agenda functionality as possible, but since they aren't actual agenda buffers (and since I think Org only allows one actual Agenda buffer), that may not be possible.
+
+** MAYBE Use library for window management
+
+*** Libraries
+:PROPERTIES:
+:ID:       69401cff-34b3-4887-bd45-aa4613420172
+:END:
+
+**** =splitter=
 
 =splitter.el= looks like it may be useful, especially the functions =spl-grid= and =spl-split=.
 
-*** =tile.el=
+**** =tile.el=
 
 This also looks like it might be useful, but I don't see any examples, and it doesn't seem obvious how to use it, so some experimentation would be required.
 
-*** =wconf=
+**** =wconf=
 
 This might also be useful.  From its readme:
 
@@ -62,7 +118,7 @@ This might also be useful.  From its readme:
 
 #+END_SRC
 
-*** =window-layout=
+**** =window-layout=
 
 This looks like it might do what I need, as it has "recipes":
 
@@ -163,7 +219,7 @@ This looks like it might do what I need, as it has "recipes":
   argument, the window management object.
 #+END_EXAMPLE
 
-*** =window-purpose=
+**** =window-purpose=
 
 This looks like it might be useful too:
 
@@ -203,7 +259,9 @@ This looks like it might be useful too:
      with C-u. For example, [C-u C-x b] calls
      `switch-buffer-without-purpose'.
 #+END_EXAMPLE
+
 * Code
+
 ** Testing
 
 #+BEGIN_SRC elisp
