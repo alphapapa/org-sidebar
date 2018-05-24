@@ -25,6 +25,16 @@ e.g. emphasis like =code= isn't applied, so the raw syntax is visible.
 
 * Ideas
 
+** MAYBE Emacs 26 side windows
+
+e.g. as mentioned [[https://www.reddit.com/r/emacs/comments/7h5til/uelizaretskii_emacs_26_is_nearing_its_release_the/dqpdn9n/][here]].  Also from the changelog:
+
+#+BEGIN_QUOTE
+Support for side windows is now official. The display action function 'display-buffer-in-side-window' will display its buffer in a side window. Functions for toggling all side windows on a frame, changing and reversing the layout of side windows and returning the main (major non-side) window of a frame are provided. For details consult the section "(elisp) Side Windows" in the ELisp manual.
+
+Support for atomic windows - rectangular compositions of windows treated by 'split-window', 'delete-window' and 'delete-other-windows' like a single live window - is now official. For details consult the section "(elisp) Atomic Windows" in the ELisp manual.
+#+END_QUOTE
+
 ** MAYBE Automatically update sidebar buffers
 
 For small Org buffers, it should be no problem, and might even work on a timer or a hook.  For larger ones, it becomes expensive, and will probably have to be done manually.
