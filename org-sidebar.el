@@ -136,18 +136,17 @@ seeing an overview of tasks in a subtree."
         (setq todo-window (with-selected-window agenda-window
                             (split-window-vertically)))
 
-        (org-sidebar--prepare-window agenda-window (format " %s: Agenda" buffer-name-string) agenda-string)
-        (org-sidebar--prepare-window todo-window (format " %s: Other TODOs" buffer-name-string) todo-string)
+        (org-sidebar--prepare-window agenda-window main-window (format " %s: Agenda" buffer-name-string) agenda-string)
+        (org-sidebar--prepare-window todo-window main-window (format " %s: Other TODOs" buffer-name-string) todo-string)
 
         (select-window main-window)))))
 
 ;;;; Functions
 
-(defun org-sidebar--prepare-window (window name contents)
+(defun org-sidebar--prepare-window (window org-buffer-window name contents)
   "Prepare WINDOW as a sidebar buffer.
 Use NAME and insert CONTENTS."
-  (let ((org-buffer (current-buffer))
-        (org-buffer-window main-window))
+  (let ((org-buffer (current-buffer)))
     (with-selected-window window
       (switch-to-buffer (get-buffer-create (format " *%s*" name)))
       (setq header-line-format (propertize name
