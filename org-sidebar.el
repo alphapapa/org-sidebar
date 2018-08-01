@@ -86,6 +86,7 @@ Takes a single argument: the Org element being formatted.")
 
 ;;;; Commands
 
+;;;###autoload
 (defun org-sidebar ()
   "This package presents a helpful sidebar view for Org buffers.
 At the top is a chronological list of scheduled and deadlined
