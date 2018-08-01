@@ -171,8 +171,10 @@ specified, it will be set automatically."
                      (t (s-join "\n" it)))
                (insert it))
           (goto-char (point-min))
-          (display-buffer-in-side-window (current-buffer) (a-list 'side org-sidebar-side
-                                                                  'slot slot))
+          (display-buffer-in-side-window (current-buffer)
+                                         (a-list 'side org-sidebar-side
+                                                 'slot slot
+                                                 'window-parameters (a-list 'no-delete-other-windows t)))
           (cl-incf slot))))))
 
 ;;;; Functions
