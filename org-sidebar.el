@@ -53,6 +53,8 @@
 (require 'dash-functional)
 (require 's)
 
+(require 'org-super-agenda)
+
 (require 'org-ql)
 (require 'org-agenda-ng)
 
@@ -104,7 +106,9 @@ buffer."
 
 ;;;###autoload
 (cl-defun org-sidebar (&key (fns '(org-sidebar--agenda-items org-sidebar--to-do-items))
-                            (group t))
+                            (group t)
+                            super-groups
+                            header)
   "This package presents a helpful sidebar view for Org buffers.
 At the top is a chronological list of scheduled and deadlined
 tasks in the current buffer, and below that is a list of all
@@ -120,7 +124,11 @@ grouping, in which case the GROUP argument to this function
 must not be used).
 
 GROUP specifies to call each function in FNS with its group
-keyword argument non-nil."
+keyword argument non-nil.  SUPER-GROUPS may be set instead, which
+specifies grouping to be done by `org-super-agenda'.
+
+HEADER specifies a string to use as the header line.  If not
+specified, it will be set automatically."
   (interactive)
   (let ((source-buffer (current-buffer))
         (slot 0)
@@ -131,9 +139,13 @@ keyword argument non-nil."
                               (funcall it :group t)
                             (funcall it)))))
         (with-current-buffer (get-buffer-create (format " *org-sidebar: %s*" slot))
-          (org-sidebar--prepare-buffer source-buffer (buffer-name source-buffer))
+          (org-sidebar--prepare-buffer source-buffer (or header (buffer-name source-buffer)))
           (--> items
-               (org-sidebar--format-grouped-items it)
+               (cond (group (org-sidebar--format-grouped-items it))
+                     ;; FIXME: Document super-groups in readme
+                     (super-groups (let ((org-super-agenda-groups super-groups))
+                                     (s-join "\n" (org-super-agenda--group-items it))))
+                     (t (s-join "\n" it)))
                (insert it))
           (goto-char (point-min))
           (display-buffer-in-side-window (current-buffer) (a-list 'side org-sidebar-side
