@@ -65,13 +65,16 @@
         (mappings '(
                     "RET" org-sidebar--jump
                     "<mouse-1>" org-sidebar--jump
-                    "g" org-sidebar
+                    "g" org-sidebar-update
                     "q" bury-buffer
                     )))
     (cl-loop for (key fn) on mappings by #'cddr
              do (define-key map (kbd key) fn))
     map)
   "Keymap for `org-sidebar' buffers.")
+
+(defvar org-sidebar-updating nil
+  "Is non-nil when updating a sidebar.")
 
 ;; MAYBE: Use a list of variables, stored as an alist in a single variable.
 (defvar-local org-sidebar-source-buffer nil
@@ -91,20 +94,18 @@
   "Options for `org-sidebar'."
   :group 'org)
 
+(defcustom org-sidebar-group-items t
+  "Group items by default."
+  :type 'boolean)
+
 (defcustom org-sidebar-date-format "%e %B %Y"
   "Format string for date headers.
 See `format-time-string'."
   :type 'string)
 
-(defcustom org-sidebar-format-fn (lambda (element)
-                                   (->> element
-                                        org-agenda-ng--add-markers
-                                        org-agenda-ng--format-element))
+(defcustom org-sidebar-format-fn #'org-agenda-ng--format-element
   "Function used to format elements.
-Takes a single argument: the Org element being formatted.  This
-function should return a string which has the text property
-`org-marker' set to a marker at the entry in the source Org
-buffer."
+Takes a single argument: the Org element being formatted."
   :type 'function)
 
 (defcustom org-sidebar-side 'right
@@ -140,13 +141,15 @@ specifies groups to be passed to `org-super-agenda'.
 HEADER specifies a string to use as the header line.  If not
 specified, it will be set automatically."
   (interactive)
-  (let ((source-buffer (current-buffer))
+  (let ((source-buffer (if org-sidebar-updating
+                           org-sidebar-source-buffer
+                         (current-buffer)))
         (slot 0)
         (fns (or org-sidebar-fns
                  fns))
-        (group (if group-passed
-                   group
-                 org-sidebar-group))
+        (group (cond (group-passed group)
+                     (org-sidebar-updating org-sidebar-group)
+                     (t org-sidebar-group-items)))
         (super-groups (or org-sidebar-super-groups
                           super-groups))
         (header (or org-sidebar-header
@@ -178,6 +181,12 @@ specified, it will be set automatically."
                                                  'window-parameters (a-list 'no-delete-other-windows t)))
           (cl-incf slot))))))
 
+(defun org-sidebar-update ()
+  "Update current sidebar buffer."
+  (interactive)
+  (let ((org-sidebar-updating t))
+    (org-sidebar)))
+
 ;;;; Functions
 
 (defun org-sidebar--format-grouped-items (groups)
@@ -205,7 +214,8 @@ with `org-sidebar-format-fn'."
                     (deadline))
                 (not (done)))
            :sort (date priority todo)
-           :narrow t)
+           :narrow t
+           :markers t)
          (-map org-sidebar-format-fn it)
          (if group
              (-group-by #'date-header it)
@@ -221,7 +231,8 @@ formatted with `org-sidebar-format-fn'."
                        (scheduled)
                        (deadline))))
          :sort (todo priority)
-         :narrow t)
+         :narrow t
+         :markers t)
        (-map org-sidebar-format-fn it)
        (if group
            (--group-by (get-text-property 0 'todo-state it) it)
