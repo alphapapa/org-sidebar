@@ -65,15 +65,24 @@
         (mappings '(
                     "RET" org-sidebar--jump
                     "<mouse-1>" org-sidebar--jump
-                    "g" org-sidebar--update
+                    "g" org-sidebar
                     )))
     (cl-loop for (key fn) on mappings by #'cddr
              do (define-key map (kbd key) fn))
     map)
   "Keymap for `org-sidebar' buffers.")
 
+;; MAYBE: Use a list of variables, stored as an alist in a single variable.
 (defvar-local org-sidebar-source-buffer nil
   "The source Org buffer for entries in this sidebar buffer.")
+(defvar-local org-sidebar-group nil
+  "The group setting for entries in this sidebar buffer.")
+(defvar-local org-sidebar-super-groups nil
+  "The super groups for entries in this sidebar buffer.")
+(defvar-local org-sidebar-fns nil
+  "The functions for entries in this sidebar buffer.")
+(defvar-local org-sidebar-header nil
+  "The header in this sidebar buffer.")
 
 ;;;; Customization
 
@@ -106,7 +115,7 @@ buffer."
 
 ;;;###autoload
 (cl-defun org-sidebar (&key (fns '(org-sidebar--agenda-items org-sidebar--to-do-items))
-                            (group t)
+                            (group nil group-passed)
                             super-groups
                             header)
   "This package presents a helpful sidebar view for Org buffers.
@@ -132,6 +141,15 @@ specified, it will be set automatically."
   (interactive)
   (let ((source-buffer (current-buffer))
         (slot 0)
+        (fns (or org-sidebar-fns
+                 fns))
+        (group (if group-passed
+                   group
+                 org-sidebar-group))
+        (super-groups (or org-sidebar-super-groups
+                          super-groups))
+        (header (or org-sidebar-header
+                    header))
         (inhibit-read-only t))
     (--each fns
       (when-let ((items (with-current-buffer source-buffer
@@ -139,7 +157,12 @@ specified, it will be set automatically."
                               (funcall it :group t)
                             (funcall it)))))
         (with-current-buffer (get-buffer-create (format " *org-sidebar: %s*" slot))
-          (org-sidebar--prepare-buffer source-buffer (or header (buffer-name source-buffer)))
+          (org-sidebar--prepare-buffer (or header (buffer-name source-buffer)))
+          (setq org-sidebar-source-buffer source-buffer
+                org-sidebar-group group
+                org-sidebar-super-groups super-groups
+                org-sidebar-fns fns
+                org-sidebar-header header)
           (--> items
                (cond (group (org-sidebar--format-grouped-items it))
                      ;; FIXME: Document super-groups in readme
@@ -201,15 +224,14 @@ formatted with `org-sidebar-format-fn'."
            (--group-by (get-text-property 0 'todo-state it) it)
          it)))
 
-(defun org-sidebar--prepare-buffer (source-buffer name)
+(defun org-sidebar--prepare-buffer (name)
   "Prepare current buffer as a sidebar buffer.
 Header line is set to NAME string, and
 `org-sidebar-source-buffer' is set to SOURCE-BUFFER."
   (let ((inhibit-read-only t))
-    (setq org-sidebar-source-buffer source-buffer)
-    (read-only-mode 1)
     (setq header-line-format (propertize name 'face '(:inherit org-agenda-date-today))
           mode-line-format nil)
+    (read-only-mode 1)
     (use-local-map org-sidebar-map)
     (erase-buffer)
     (goto-char (point-min))
@@ -226,14 +248,6 @@ Header line is set to NAME string, and
              (goto-char marker)
              (org-reveal))
     (user-error "Item's buffer no longer exists")))
-
-(defun org-sidebar--update ()
-  "Update `org-sidebar' buffer."
-  (interactive)
-  (unless (buffer-live-p org-sidebar-source-buffer)
-    (user-error "Sidebar's source buffer no longer exists"))
-  (with-current-buffer org-sidebar-source-buffer
-    (org-sidebar)))
 
 ;;;; Footer
 
