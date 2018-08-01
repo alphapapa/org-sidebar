@@ -66,6 +66,7 @@
                     "RET" org-sidebar--jump
                     "<mouse-1>" org-sidebar--jump
                     "g" org-sidebar
+                    "q" bury-buffer
                     )))
     (cl-loop for (key fn) on mappings by #'cddr
              do (define-key map (kbd key) fn))
