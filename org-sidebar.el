@@ -78,11 +78,13 @@
 
 (defcustom org-sidebar-date-format "%e %B %Y"
   "Format string for date headers.
-See `format-time-string'.")
+See `format-time-string'."
+  :type 'string)
 
 (defcustom org-sidebar-format-fn #'org-agenda-ng--format-element
   "Function used to format elements.
-Takes a single argument: the Org element being formatted.")
+Takes a single argument: the Org element being formatted."
+  :type 'function)
 
 ;;;; Commands
 
