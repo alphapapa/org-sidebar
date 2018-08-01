@@ -70,6 +70,9 @@
     map)
   "Keymap for `org-sidebar' buffers.")
 
+(defvar-local org-sidebar-source-buffer nil
+  "The source Org buffer for entries in this sidebar buffer.")
+
 ;;;; Customization
 
 (defgroup org-sidebar nil
@@ -81,56 +84,74 @@
 See `format-time-string'."
   :type 'string)
 
-(defcustom org-sidebar-format-fn #'org-agenda-ng--format-element
+(defcustom org-sidebar-format-fn (lambda (element)
+                                   (->> element
+                                        org-agenda-ng--add-markers
+                                        org-agenda-ng--format-element))
   "Function used to format elements.
-Takes a single argument: the Org element being formatted."
+Takes a single argument: the Org element being formatted.  This
+function should return a string which has the text property
+`org-marker' set to a marker at the entry in the source Org
+buffer."
   :type 'function)
+
+(defcustom org-sidebar-side 'right
+  "Which side to show the sidebar on."
+  :type '(choice (const :tag "Left" left)
+                 (const :tag "Right" right)))
 
 ;;;; Commands
 
 ;;;###autoload
-(defun org-sidebar ()
+(cl-defun org-sidebar (&key (fns '(org-sidebar--agenda-items org-sidebar--to-do-items))
+                            (group t))
   "This package presents a helpful sidebar view for Org buffers.
 At the top is a chronological list of scheduled and deadlined
 tasks in the current buffer, and below that is a list of all
 other non-done to-do items.  If the buffer is narrowed, the
 sidebar only shows items in the narrowed portion; this allows
-seeing an overview of tasks in a subtree."
+seeing an overview of tasks in a subtree.
+
+FNS is a list of functions that return Org headline elements (as
+returned by `org-element-headline-parser').  Such functions
+should take a keyword argument `group' which causes them to
+return elements grouped with `-group-by' (or they may omit
+grouping, in which case the GROUP argument to this function
+must not be used).
+
+GROUP specifies to call each function in FNS with its group
+keyword argument non-nil."
   (interactive)
-  (cl-flet ((date-header (item)
-                         (propertize (org-timestamp-format (or (get-text-property 0 'scheduled item)
-                                                               (get-text-property 0 'deadline item))
-                                                           org-sidebar-date-format)
-                                     'face '(:inherit variable-pitch :weight bold))))
-    (let* ((buffer (current-buffer))
-           (agenda-items (org-sidebar--agenda-items :group t))
-           (to-do-items (org-sidebar--to-do-items))
-           (agenda-string (with-temp-buffer
-                            (--each agenda-items
-                              (-let (((header . items) it))
-                                (insert "\n" header "\n\n")
-                                (--each items
-                                  (insert it "\n"))))
-                            (buffer-string)))
-           (to-do-string (s-join "\n" to-do-items))
-           (frame (selected-frame))
-           (buffer-name-string (concat (when (buffer-narrowed-p)
-                                         "[narrowed] ")
-                                       (buffer-name)))
-           main-window agenda-window todo-window)
-      (with-selected-frame frame
-        (delete-other-windows)
-        (setq main-window (selected-window))
-        (setq agenda-window (split-window nil -50 'right))
-        (setq todo-window (with-selected-window agenda-window
-                            (split-window-vertically)))
-
-        (org-sidebar--prepare-window agenda-window main-window (format " %s: Agenda" buffer-name-string) agenda-string)
-        (org-sidebar--prepare-window todo-window main-window (format " %s: Other TODOs" buffer-name-string) to-do-string)
-
-        (select-window main-window)))))
+  (let ((source-buffer (current-buffer))
+        (slot 0)
+        (inhibit-read-only t))
+    (--each fns
+      (when-let ((items (with-current-buffer source-buffer
+                          (if group
+                              (funcall it :group t)
+                            (funcall it)))))
+        (with-current-buffer (get-buffer-create (format " *org-sidebar: %s*" slot))
+          (org-sidebar--prepare-buffer source-buffer (buffer-name source-buffer))
+          (--> items
+               (org-sidebar--format-grouped-items it)
+               (insert it))
+          (goto-char (point-min))
+          (display-buffer-in-side-window (current-buffer) (a-list 'side org-sidebar-side
+                                                                  'slot slot))
+          (cl-incf slot))))))
 
 ;;;; Functions
+
+(defun org-sidebar--format-grouped-items (groups)
+  "Return items in GROUPS formatted as a string.
+GROUPS should be grouped like with `-group-by'."
+  (with-temp-buffer
+    (--each groups
+      (-let (((header . items) it))
+        (insert "\n" header "\n\n")
+        (--each items
+          (insert it "\n"))))
+    (buffer-string)))
 
 (cl-defun org-sidebar--agenda-items (&key group)
   "Return list of agenda items for current buffer.
@@ -168,38 +189,38 @@ formatted with `org-sidebar-format-fn'."
            (--group-by (get-text-property 0 'todo-state it) it)
          it)))
 
-(defun org-sidebar--prepare-window (window org-buffer-window name contents)
-  "Prepare WINDOW as a sidebar buffer.
-Use NAME and insert CONTENTS."
-  (let ((org-buffer (current-buffer)))
-    (with-selected-window window
-      (switch-to-buffer (get-buffer-create (format " *%s*" name)))
-      (setq header-line-format (propertize name
-                                           'face '(:inherit org-agenda-date-today))
-            mode-line-format nil)
-      (set-window-parameter nil 'org-buffer org-buffer)
-      (set-window-parameter nil 'org-buffer-window org-buffer-window)
-      (use-local-map org-sidebar-map)
-      (erase-buffer)
-      (insert contents)
-      (goto-char (point-min))
-      (toggle-truncate-lines 1))))
+(defun org-sidebar--prepare-buffer (source-buffer name)
+  "Prepare current buffer as a sidebar buffer.
+Header line is set to NAME string, and
+`org-sidebar-source-buffer' is set to SOURCE-BUFFER."
+  (let ((inhibit-read-only t))
+    (setq org-sidebar-source-buffer source-buffer)
+    (read-only-mode 1)
+    (setq header-line-format (propertize name 'face '(:inherit org-agenda-date-today))
+          mode-line-format nil)
+    (use-local-map org-sidebar-map)
+    (erase-buffer)
+    (goto-char (point-min))
+    (toggle-truncate-lines 1)))
 
 (defun org-sidebar--jump ()
   "Jump to entry at sidebar buffer's point in source buffer."
   (interactive)
-  (when-let ((begin (get-text-property (point) 'begin))
-             (org-buffer (window-parameter nil 'org-buffer))
-             (org-buffer-window (window-parameter nil 'org-buffer-window)))
-    (select-window org-buffer-window)
-    (goto-char begin)
-    (org-reveal)))
+  (if-let* ((marker (get-text-property (point) 'org-marker))
+            (buffer (marker-buffer marker)))
+      (progn (--if-let (get-buffer-window buffer)
+                 (select-window it)
+               (pop-to-buffer buffer))
+             (goto-char marker)
+             (org-reveal))
+    (user-error "Item's buffer no longer exists")))
 
 (defun org-sidebar--update ()
   "Update `org-sidebar' buffer."
   (interactive)
-  (when-let ((org-buffer-window (window-parameter nil 'org-buffer-window)))
-    (select-window org-buffer-window)
+  (unless (buffer-live-p org-sidebar-source-buffer)
+    (user-error "Sidebar's source buffer no longer exists"))
+  (with-current-buffer org-sidebar-source-buffer
     (org-sidebar)))
 
 ;;;; Footer

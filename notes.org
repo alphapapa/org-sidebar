@@ -25,6 +25,10 @@ e.g. emphasis like =code= isn't applied, so the raw syntax is visible.
 
 * Ideas
 
+** TODO Persistent list of nodes/searches
+
+I'd like to be able to add certain nodes of interest (sometimes with child nodes) to a sidebar.  It would also be nice to be able to add "views" or agenda searches for tags, etc (inspired by [[https://raw.githubusercontent.com/wakatara/HelvetiCan-Taskpaper-theme/master/HelvetiCan_taskpaper_theme_preview.png][this screenshot]]).
+
 ** MAYBE Emacs 26 side windows
 
 e.g. as mentioned [[https://www.reddit.com/r/emacs/comments/7h5til/uelizaretskii_emacs_26_is_nearing_its_release_the/dqpdn9n/][here]].  Also from the changelog:
@@ -61,7 +65,19 @@ e.g. in the current window layout, if the Org buffer displayed in the main windo
 
 e.g. changing TODO keyword, etc.  It would be good to reuse as much Org Agenda functionality as possible, but since they aren't actual agenda buffers (and since I think Org only allows one actual Agenda buffer), that may not be possible.
 
-** MAYBE Use library for window management
+** DONE Use library for window management
+CLOSED: [2018-08-01 Wed 10:11]
+:LOGBOOK:
+-  State "DONE"       from "MAYBE"      [2018-08-01 Wed 10:11]
+:END:
+
+*** =display-buffer-in-side-window=
+
+I did not know about this before.  It might be the right tool for the job...
+
+[[https://www.gnu.org/software/emacs/draft/manual/html_node/elisp/Side-Windows.html][GNU Emacs Lisp Reference Manual: Side Windows]]
+
+[2018-08-01 Wed 10:10]  Yep, this works very well!  Going to consider this idea done unless we need more powerful window management in the future.
 
 *** Libraries
 :PROPERTIES:
