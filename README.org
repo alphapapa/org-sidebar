@@ -1,10 +1,12 @@
+
+
 * org-sidebar
 
 This package presents a helpful sidebar view for Org buffers.  At the top is a chronological list of scheduled and deadlined tasks in the current buffer (similar to the Org agenda ,but without all its features), and below that is a list of all other non-done to-do items.  If the buffer is narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of tasks in a subtree.
 
 Please note: this package is in an early stage of development.
 
-[[screenshot.png]]
+[[images/screenshot.png]]
 
 ** Installation
 
@@ -20,6 +22,10 @@ Install these packages (e.g. from MELPA):
 Eval =(require 'org-sidebar)=.  Then, in an Org buffer, run the command =org-sidebar=.
 
 Customization options are in the =org-sidebar= group.
+
+*** Custom commands
+
+For examples of defining custom sidebar commands, please see [[examples.org]].
 
 ** Notes
 
