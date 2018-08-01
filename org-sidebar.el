@@ -134,7 +134,7 @@ must not be used).
 
 GROUP specifies to call each function in FNS with its group
 keyword argument non-nil.  SUPER-GROUPS may be set instead, which
-specifies grouping to be done by `org-super-agenda'.
+specifies groups to be passed to `org-super-agenda'.
 
 HEADER specifies a string to use as the header line.  If not
 specified, it will be set automatically."
