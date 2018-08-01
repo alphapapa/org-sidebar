@@ -103,22 +103,8 @@ seeing an overview of tasks in a subtree."
                                                            org-sidebar-date-format)
                                      'face '(:inherit variable-pitch :weight bold))))
     (let* ((buffer (current-buffer))
-           (agenda-items (--> (org-ql buffer
-                                (and (or (scheduled)
-                                         (deadline))
-                                     (not (done)))
-                                :sort (date priority todo)
-                                :narrow t)
-                              (-map org-sidebar-format-fn it)
-                              (-group-by #'date-header it)))
-           (todo-items (--> (org-ql buffer
-                              (and (todo)
-                                   (not (or (done)
-                                            (scheduled)
-                                            (deadline))))
-                              :sort (todo priority)
-                              :narrow t)
-                            (-map org-sidebar-format-fn it)))
+           (agenda-items (org-sidebar--agenda-items :group t))
+           (to-do-items (org-sidebar--to-do-items))
            (agenda-string (with-temp-buffer
                             (--each agenda-items
                               (-let (((header . items) it))
@@ -126,7 +112,7 @@ seeing an overview of tasks in a subtree."
                                 (--each items
                                   (insert it "\n"))))
                             (buffer-string)))
-           (todo-string (s-join "\n" todo-items))
+           (to-do-string (s-join "\n" to-do-items))
            (frame (selected-frame))
            (buffer-name-string (concat (when (buffer-narrowed-p)
                                          "[narrowed] ")
@@ -140,11 +126,47 @@ seeing an overview of tasks in a subtree."
                             (split-window-vertically)))
 
         (org-sidebar--prepare-window agenda-window main-window (format " %s: Agenda" buffer-name-string) agenda-string)
-        (org-sidebar--prepare-window todo-window main-window (format " %s: Other TODOs" buffer-name-string) todo-string)
+        (org-sidebar--prepare-window todo-window main-window (format " %s: Other TODOs" buffer-name-string) to-do-string)
 
         (select-window main-window)))))
 
 ;;;; Functions
+
+(cl-defun org-sidebar--agenda-items (&key group)
+  "Return list of agenda items for current buffer.
+When GROUP is non-nil, group items by date.  Items are formatted
+with `org-sidebar-format-fn'."
+  (cl-flet ((date-header (item)
+                         (propertize (org-timestamp-format (or (get-text-property 0 'scheduled item)
+                                                               (get-text-property 0 'deadline item))
+                                                           org-sidebar-date-format)
+                                     'face '(:inherit variable-pitch :weight bold))))
+    (--> (org-ql (current-buffer)
+           (and (or (scheduled)
+                    (deadline))
+                (not (done)))
+           :sort (date priority todo)
+           :narrow t)
+         (-map org-sidebar-format-fn it)
+         (if group
+             (-group-by #'date-header it)
+           it))))
+
+(cl-defun org-sidebar--to-do-items (&key group)
+  "Return list of to-do items for current buffer.
+When GROUP is non-nil, group items by to-do keyword. Items are
+formatted with `org-sidebar-format-fn'."
+  (--> (org-ql (current-buffer)
+         (and (todo)
+              (not (or (done)
+                       (scheduled)
+                       (deadline))))
+         :sort (todo priority)
+         :narrow t)
+       (-map org-sidebar-format-fn it)
+       (if group
+           (--group-by (get-text-property 0 'todo-state it) it)
+         it)))
 
 (defun org-sidebar--prepare-window (window org-buffer-window name contents)
   "Prepare WINDOW as a sidebar buffer.
