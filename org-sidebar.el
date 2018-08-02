@@ -263,6 +263,27 @@ Header line is set to NAME string, and
              (org-reveal))
     (user-error "Item's buffer no longer exists")))
 
+;;;; Macros
+
+(cl-defmacro org-sidebar-defsidebar (name &key sidebars super-groups header group
+                                          (sort '(date todo priority)))
+  "Define a function, NAME, that calls `org-sidebar' with the given arguments."
+  (declare (indent defun))
+  `(defun ,name ()
+     ,(format "org-sidebar command defined with `org-sidebar-defsidebar'.")
+     (org-sidebar :header ,header
+                  :fns ',(--map (-let* (((query &keys :files files :sort this-sort) it)
+                                        (files (or files '(org-agenda-files)))
+                                        (sort (or this-sort sort)))
+                                  `(lambda (&rest _args)
+                                     (org-ql ,files
+                                       ,query
+                                       :sort ,sort
+                                       :markers t)))
+                                sidebars)
+                  :super-groups ,super-groups
+                  :group ,group)))
+
 ;;;; Footer
 
 (provide 'org-sidebar)

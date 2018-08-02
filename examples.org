@@ -4,45 +4,32 @@
 
 ** Custom sidebar command
 
-It's easy to define a custom sidebar command.  Here's an example that shows items in =org-agenda-files= that are not done and either have a deadline on or before today, or are scheduled for today.  They are sorted by date, then to-do keyword, then priority, and they are grouped with =org-super-agenda= into 4 groups:
-
-+  Time-grid items
-+  Items tagged =bills=
-+  Priority =A= items
-+  Items that are not to-do items (e.g. only have a date associated)
-+  Finally, leftover items that have priority less than =B= are discarded.
-
-Note that items returned by the ~org-ql~ query are mapped through the ~ap/org-sidebar-format-element~ function, which calls the default formatting function, ~org-agenda-ng--format-element~, and then modifies the face of the items to inherit from the =variable-pitch= face.  Of course, this is optional, but shows how results can be customized.
-
-Note also that ~org-ql~ is called with the ~:markers t~ argument, which causes it to add the appropriate markers to entries so ~org-sidebar~ can jump to them when activated.  
-
-Future changes may streamline the process of making custom commands.  Feedback is welcome.
+It's easy to define a custom sidebar command.  Here's an example that shows items in =org-agenda-files= that are not done and either have a deadline on or before today, or are scheduled for today.  It defines a command named ~my-sidebar~.  The query (~(and ...~) uses [[https://github.com/alphapapa/org-agenda-ng][org-ql]] to select items.
 
 #+BEGIN_SRC elisp
-  (defun org-sidebar-today ()
-    (interactive)
-    (org-sidebar :header "Org Sidebar"
-                 :fns '((lambda (&rest args)
-                          (-map #'ap/org-sidebar-format-element
-                                (org-ql (org-agenda-files)
-                                  (and (not (done))
-                                       (or (deadline <=)
-                                           (date = today)))
-                                  :sort (date todo priority)
-                                  :markers t))))
-                 :super-groups '((:time-grid t)
-                                 (:tag "bills")
-                                 (:priority "A")
-                                 (:name "Non-tasks"
-                                        :todo nil)
-                                 (:discard (:priority< "B")))))
+  (org-sidebar-defsidebar my-sidebar
+    :header "My Sidebar"
+    :sidebars ((and (not (done))
+                    (or (deadline <=)
+                        (date = today)))))
+#+END_SRC
 
-  (defun ap/org-sidebar-format-element (element)
-    "Calls `org-agenda-ng--format-element' and adds `variable-pitch' face."
-    (aprog1 (org-agenda-ng--format-element element)
-      (add-face-text-property 0 (length it)
-                              '(:inherit variable-pitch)
-                              'append it)))
+** Grouping with =org-super-agenda=
+
+=org-sidebar= also integrates with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]].  This command is like the previous one, but it groups items with =org-super-agenda= into 4 groups.
+
+#+BEGIN_SRC elisp
+  (org-sidebar-defsidebar today-sidebar
+    :header "Today"
+    :sidebars ((and (not (done))
+                    (or (deadline <=)
+                        (date = today))))
+    :super-groups '((:time-grid t)
+                    (:tag "bills")
+                    (:priority "A")
+                    (:name "Non-tasks"
+                           :todo nil)
+                    (:discard (:priority< "B"))))
 #+END_SRC
 
 This shows a sidebar like this:
