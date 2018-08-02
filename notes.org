@@ -29,15 +29,14 @@ e.g. emphasis like =code= isn't applied, so the raw syntax is visible.
 
 I'd like to be able to add certain nodes of interest (sometimes with child nodes) to a sidebar.  It would also be nice to be able to add "views" or agenda searches for tags, etc (inspired by [[https://raw.githubusercontent.com/wakatara/HelvetiCan-Taskpaper-theme/master/HelvetiCan_taskpaper_theme_preview.png][this screenshot]]).
 
-** MAYBE Emacs 26 side windows
+[2018-08-02 Thu 10:55]  Thinking through this a bit more, here's how I think it could work:
 
-e.g. as mentioned [[https://www.reddit.com/r/emacs/comments/7h5til/uelizaretskii_emacs_26_is_nearing_its_release_the/dqpdn9n/][here]].  Also from the changelog:
-
-#+BEGIN_QUOTE
-Support for side windows is now official. The display action function 'display-buffer-in-side-window' will display its buffer in a side window. Functions for toggling all side windows on a frame, changing and reversing the layout of side windows and returning the main (major non-side) window of a frame are provided. For details consult the section "(elisp) Side Windows" in the ELisp manual.
-
-Support for atomic windows - rectangular compositions of windows treated by 'split-window', 'delete-window' and 'delete-other-windows' like a single live window - is now official. For details consult the section "(elisp) Atomic Windows" in the ELisp manual.
-#+END_QUOTE
++  defvar ~org-sidebar-persistent-items~ :: A list of formatted strings for displaying in a sidebar window.
++  defun ~org-sidebar-add-item (&optional position)~ :: Add item at ~position~ to persistent items.  ~position~ defaults to point.  Calls ~org-sidebar-show-persistent~ after adding item to list.
++  defcustom ~org-sidebar-persistent-slot~ :: Side window slot for persistent items window.
++  defun ~org-sidebar-show-persistent~ :: Show persistent items sidebar window.  Places it in slot defined by ~org-sidebar-persistent-slot~.
++  defun ~org-sidebar--update-persistent~ :: Update persistent items buffer.  Erases the buffer and inserts items from ~org-sidebar-persistent-items~.
++  defun ~org-sidebar-persistent-remove~ :: Remove item at point from persistent items buffer.
 
 ** MAYBE Automatically update sidebar buffers
 
@@ -64,6 +63,20 @@ e.g. in the current window layout, if the Org buffer displayed in the main windo
 ** MAYBE More commands for sidebar buffers
 
 e.g. changing TODO keyword, etc.  It would be good to reuse as much Org Agenda functionality as possible, but since they aren't actual agenda buffers (and since I think Org only allows one actual Agenda buffer), that may not be possible.
+
+** DONE Emacs 26 side windows
+CLOSED: [2018-08-02 Thu 11:03]
+:LOGBOOK:
+-  State "DONE"       from "MAYBE"      [2018-08-02 Thu 11:03]
+:END:
+
+e.g. as mentioned [[https://www.reddit.com/r/emacs/comments/7h5til/uelizaretskii_emacs_26_is_nearing_its_release_the/dqpdn9n/][here]].  Also from the changelog:
+
+#+BEGIN_QUOTE
+Support for side windows is now official. The display action function 'display-buffer-in-side-window' will display its buffer in a side window. Functions for toggling all side windows on a frame, changing and reversing the layout of side windows and returning the main (major non-side) window of a frame are provided. For details consult the section "(elisp) Side Windows" in the ELisp manual.
+
+Support for atomic windows - rectangular compositions of windows treated by 'split-window', 'delete-window' and 'delete-other-windows' like a single live window - is now official. For details consult the section "(elisp) Atomic Windows" in the ELisp manual.
+#+END_QUOTE
 
 ** DONE Use library for window management
 CLOSED: [2018-08-01 Wed 10:11]

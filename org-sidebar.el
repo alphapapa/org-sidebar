@@ -300,6 +300,8 @@ SUPER-GROUPS is optionally used as the value of
   `(defun ,name ()
      ,(format "org-sidebar command defined with `org-sidebar-defsidebar'.")
      (org-sidebar :header ,header
+                  ;; TODO: Improve handling of SIDEBARS arg to reduce nesting level.  See proposed
+                  ;; plist pcase matcher.
                   :fns ',(--map (-let* (((query &keys :files this-files :sort this-sort) it)
                                         (files (or this-files files))
                                         (sort (or this-sort sort)))
