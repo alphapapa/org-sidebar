@@ -266,14 +266,36 @@ Header line is set to NAME string, and
 ;;;; Macros
 
 (cl-defmacro org-sidebar-defsidebar (name &key sidebars super-groups header group
+                                          (files '(org-agenda-files))
                                           (sort '(date todo priority)))
-  "Define a function, NAME, that calls `org-sidebar' with the given arguments."
+  "Define a function, NAME, that calls `org-sidebar' with the given arguments.
+
+SIDEBARS is a list of `org-ql' query forms.  Each one may be
+followed by the same keyword arguments this macro accepts (except
+`:sidebars'), which override the arguments given to this macro.
+For example:
+
+  (org-sidebar-defsidebar my-sidebar
+    :header \"My Sidebar\"
+    :sidebars ((and (not (done))
+                    (or (deadline <=)
+                        (date = today)))
+               :files \"file.org\"))
+
+FILES is an expression which should evaluate to one or a list of
+files or buffers.  It defaults to the `org-agenda-files'
+function.
+
+SORT is passed to `org-ql', which see.
+
+SUPER-GROUPS is optionally used as the value of
+`org-super-agenda-groups', which see."
   (declare (indent defun))
   `(defun ,name ()
      ,(format "org-sidebar command defined with `org-sidebar-defsidebar'.")
      (org-sidebar :header ,header
-                  :fns ',(--map (-let* (((query &keys :files files :sort this-sort) it)
-                                        (files (or files '(org-agenda-files)))
+                  :fns ',(--map (-let* (((query &keys :files this-files :sort this-sort) it)
+                                        (files (or this-files files))
                                         (sort (or this-sort sort)))
                                   `(lambda (&rest _args)
                                      (org-ql ,files
