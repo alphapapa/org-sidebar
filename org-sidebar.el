@@ -304,10 +304,11 @@ SUPER-GROUPS is optionally used as the value of
                                         (files (or this-files files))
                                         (sort (or this-sort sort)))
                                   `(lambda (&rest _args)
-                                     (org-ql ,files
-                                       ,query
-                                       :sort ,sort
-                                       :markers t)))
+                                     (-map org-sidebar-format-fn
+                                           (org-ql ,files
+                                             ,query
+                                             :sort ,sort
+                                             :markers t))))
                                 sidebars)
                   :super-groups ,super-groups
                   :group ,group)))
