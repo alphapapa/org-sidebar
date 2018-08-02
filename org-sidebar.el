@@ -98,6 +98,10 @@
   "Group items by default."
   :type 'boolean)
 
+(defcustom org-sidebar-jump-indirect t
+  "Show items with `org-tree-to-indirect-buffer'."
+  :type 'boolean)
+
 (defcustom org-sidebar-date-format "%e %B %Y"
   "Format string for date headers.
 See `format-time-string'."
@@ -260,7 +264,9 @@ Header line is set to NAME string, and
                  (select-window it)
                (pop-to-buffer buffer))
              (goto-char marker)
-             (org-reveal))
+             (org-reveal)
+             (when org-sidebar-jump-indirect
+               (org-tree-to-indirect-buffer)))
     (user-error "Item's buffer no longer exists")))
 
 ;;;; Macros
