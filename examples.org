@@ -16,20 +16,22 @@ It's easy to define a custom sidebar command.  Here's an example that shows item
 
 ** Grouping with =org-super-agenda=
 
-=org-sidebar= also integrates with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]].  This command is like the previous one, but it groups items with =org-super-agenda= into 4 groups.
+=org-sidebar= also integrates with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]].  This command is like the previous one, but it groups items with =org-super-agenda= into several groups.
 
 #+BEGIN_SRC elisp
   (org-sidebar-defsidebar today-sidebar
     :header "Today"
-    :sidebars ((and (not (done))
-                    (or (deadline <=)
-                        (date = today))))
+    :sidebars (((and (not (done))
+                     (or (deadline <=)
+                         (scheduled <=)
+                         (date = today)))))
     :super-groups '((:time-grid t)
+                    (:name "Overdue" :scheduled past :deadline past)
+                    (:name "Due today" :scheduled today :deadline today)
                     (:tag "bills")
                     (:priority "A")
                     (:name "Non-tasks"
-                           :todo nil)
-                    (:discard (:priority< "B"))))
+                           :todo nil)))
 #+END_SRC
 
 This shows a sidebar like this:
@@ -42,7 +44,7 @@ This shows a sidebar like this:
   (org-super-agenda--test-with-org-today-date "2017-07-05 12:00"
     (org-super-agenda--test-with-mock-functions ((org-agenda-files (lambda ()
                                                                      '("/home/me/src/emacs/org-super-agenda/test/test.org"))))
-      (org-sidebar-today)))
+      (today-sidebar)))
 #+END_SRC
 
 
