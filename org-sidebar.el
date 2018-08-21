@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/org-sidebar
 ;; Version: 0.1-pre
-;; Package-Requires: ((emacs "25.1") (s "1.10.0") (dash "2.13") (org "9.0") (org-ql) (org-agenda-ng) (org-super-agenda "1.0"))
+;; Package-Requires: ((emacs "25.1") (s "1.10.0") (dash "2.13") (org "9.0") (org-ql) (org-ql-agenda) (org-super-agenda "1.0"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
@@ -14,12 +14,13 @@
 ;; narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of
 ;; tasks in a subtree.
 
-;; NOTE: This package is in an early stage of development.
+;; NOTE: Please note: this package is in an early stage of development, so incompatible changes may
+;; be made in the future.  However, it's stable and usable now.  Feedback is appreciated.
 
 ;;;; Installation
 
 ;; Install the required packages (see the "Package-Requires" line in the headers at the top).
-;; org-ql and org-agenda-ng may be found at <http://github.com/alphapapa/org-agenda-ng>.  Then put
+;; org-ql and org-ql-agenda may be found at <http://github.com/alphapapa/org-ql>.  Then put
 ;; this file in your `load-path'.
 
 ;;;; Usage
@@ -56,7 +57,7 @@
 (require 'org-super-agenda)
 
 (require 'org-ql)
-(require 'org-agenda-ng)
+(require 'org-ql-agenda)
 
 ;;;; Variables
 
@@ -107,7 +108,7 @@
 See `format-time-string'."
   :type 'string)
 
-(defcustom org-sidebar-format-fn #'org-agenda-ng--format-element
+(defcustom org-sidebar-format-fn #'org-ql-agenda--format-element
   "Function used to format elements.
 Takes a single argument: the Org element being formatted."
   :type 'function)
