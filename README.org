@@ -23,6 +23,14 @@ Load the package with =(require 'org-sidebar)= (or use ~use-package~).  Then cal
 
 Customization options are in the =org-sidebar= group.
 
+*** Key bindings
+
+In a sidebar buffer, these keys are bound:
+
++  =RET=, =mouse-1= :: Jump to an item in its buffer.
++  =g= :: Update the sidebar.
++  =q= :: Hide the sidebar.
+
 *** Commands
 
 **** ~org-sidebar~
