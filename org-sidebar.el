@@ -110,7 +110,11 @@ See `format-time-string'."
 
 (defcustom org-sidebar-format-fn #'org-ql-agenda--format-element
   "Function used to format elements.
-Takes a single argument: the Org element being formatted."
+Takes a single argument: the Org element being formatted.
+Generally, `org-ql-agenda--format-element' should be used; if
+not, the function used should set appropriate text properties,
+imitating the Org Agenda, for commands and features which use the
+text properties to act on items."
   :type 'function)
 
 (defcustom org-sidebar-side 'right
@@ -136,8 +140,9 @@ FNS is a list of functions that return Org headline elements (as
 returned by `org-element-headline-parser').  Such functions
 should take a keyword argument `group' which causes them to
 return elements grouped with `-group-by' (or they may omit
-grouping, in which case the GROUP argument to this function
-must not be used).
+grouping, in which case the GROUP argument to this function must
+not be used).  Elements returned by each function are formatted
+with `org-sidebar-format-fn'.
 
 GROUP specifies to call each function in FNS with its group
 keyword argument non-nil.  SUPER-GROUPS may be set instead, which
@@ -165,6 +170,7 @@ specified, it will be set automatically."
                           (if group
                               (funcall it :group group)
                             (funcall it)))))
+        (setq items (mapcar org-sidebar-format-fn items))
         (with-current-buffer (get-buffer-create (format " *org-sidebar: %s*" slot))
           (setq org-sidebar-source-buffer source-buffer
                 org-sidebar-group group
@@ -225,7 +231,6 @@ NARROW: Don't widen buffers before searching."
                                            ,query
                                            :narrow ,narrow
                                            :markers t))
-                                  (mapcar org-sidebar-format-fn it)
                                   (if group
                                       (--> (--group-by (get-text-property 0 group it) it)
                                            (-sort (-on #'string<
@@ -275,7 +280,6 @@ with `org-sidebar-format-fn'."
            :sort (date priority todo)
            :narrow t
            :markers t)
-         (-map org-sidebar-format-fn it)
          (if group
              (-group-by #'date-header it)
            it))))
@@ -292,7 +296,6 @@ formatted with `org-sidebar-format-fn'."
          :sort (todo priority)
          :narrow t
          :markers t)
-       (-map org-sidebar-format-fn it)
        (if group
            (--group-by (get-text-property 0 'todo-state it) it)
          it)))
@@ -361,11 +364,10 @@ SUPER-GROUPS is optionally used as the value of
                                         (files (or this-files files))
                                         (sort (or this-sort sort)))
                                   `(lambda (&rest _args)
-                                     (-map org-sidebar-format-fn
-                                           (org-ql ,files
-                                             ,query
-                                             :sort ,sort
-                                             :markers t))))
+                                     (org-ql ,files
+                                       ,query
+                                       :sort ,sort
+                                       :markers t)))
                                 sidebars)
                   :super-groups ,super-groups
                   :group ,group)))
