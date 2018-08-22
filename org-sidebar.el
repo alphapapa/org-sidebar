@@ -163,7 +163,7 @@ specified, it will be set automatically."
     (--each fns
       (when-let ((items (with-current-buffer source-buffer
                           (if group
-                              (funcall it :group t)
+                              (funcall it :group group)
                             (funcall it)))))
         (with-current-buffer (get-buffer-create (format " *org-sidebar: %s*" slot))
           (let ((org-sidebar-source-buffer source-buffer)
