@@ -166,24 +166,23 @@ specified, it will be set automatically."
                               (funcall it :group group)
                             (funcall it)))))
         (with-current-buffer (get-buffer-create (format " *org-sidebar: %s*" slot))
-          (let ((org-sidebar-source-buffer source-buffer)
-                (org-sidebar-group group)
-                (org-sidebar-super-groups super-groups)
-                (org-sidebar-fns fns)
-                (org-sidebar-header header)
-                (string (cond (group (org-sidebar--format-grouped-items items))
-                              ;; FIXME: Document super-groups in readme
-                              (super-groups (let ((org-super-agenda-groups super-groups))
-                                              (s-join "\n" (org-super-agenda--group-items items))))
-                              (t (s-join "\n" items)))))
-            (org-sidebar--prepare-buffer (or header (buffer-name source-buffer)))
-            (insert string)
-            (goto-char (point-min))
-            (display-buffer-in-side-window (current-buffer)
-                                           (a-list 'side org-sidebar-side
-                                                   'slot slot
-                                                   'window-parameters (a-list 'no-delete-other-windows t)))
-            (cl-incf slot)))))))
+          (setq org-sidebar-source-buffer source-buffer
+                org-sidebar-group group
+                org-sidebar-super-groups super-groups
+                org-sidebar-fns fns
+                org-sidebar-header header)
+          (org-sidebar--prepare-buffer (or header (buffer-name source-buffer)))
+          (insert (cond (group (org-sidebar--format-grouped-items items))
+                        ;; FIXME: Document super-groups in readme
+                        (super-groups (let ((org-super-agenda-groups super-groups))
+                                        (s-join "\n" (org-super-agenda--group-items items))))
+                        (t (s-join "\n" items))))
+          (goto-char (point-min))
+          (display-buffer-in-side-window (current-buffer)
+                                         (a-list 'side org-sidebar-side
+                                                 'slot slot
+                                                 'window-parameters (a-list 'no-delete-other-windows t)))
+          (cl-incf slot))))))
 
 ;;;###autoload
 (defun org-sidebar-ql (query &optional buffers-files narrow group)
