@@ -19,9 +19,40 @@ Install these packages (e.g. from MELPA):
 
 ** Usage
 
-Eval =(require 'org-sidebar)=.  Then, in an Org buffer, run the command =org-sidebar=.
+Load the package with =(require 'org-sidebar)= (or use ~use-package~).  Then call the commands below.
 
 Customization options are in the =org-sidebar= group.
+
+*** Commands
+
+**** ~org-sidebar~
+
+By default, and when called interactively, this command displays two sidebar windows:
+
++  At the top, a chronological list of scheduled and deadlined tasks in the current buffer
++  Below, a list of all other non-done to-do items.
+
+If the buffer is narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of tasks in a subtree.
+
+When called non-interactively, these keyword arguments can be specified to override defaults:
+
++  =:fns= :: A list of functions that return Org headline elements (as returned by ~org-element-headline-parser~).  Such functions should take a keyword argument ~:group~ which causes them to return elements grouped with the [[https://github.com/magnars/dash.el#-group-by-fn-list][-group-by]] function  (or they may omit grouping, in which case the ~:group~ argument to this function must not be used).
++  =:group= :: Whether to call each sidebar function with the =:group= argument set.  Each sidebar function is responsible for performing its own grouping.
++  =:super-groups= :: A list of [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] groups.  Disables the =:group= argument.
++  =:header= :: A string to use as the sidebar window header.  Set automatically if not specified.
+
+**** ~org-sidebar-ql~
+
+This interactive command prompts for an [[https://github.com/alphapapa/org-ql][org-ql]] query and displays matching items in a sidebar.  Without prefix, it searches the current Org buffer and performs no grouping.  With prefix, it prompts for which buffers/files to search and how to group results.  For example, you could:
+
+1.  Run @@html:<kbd>@@M-x org-ql-sidebar RET@@html:</kbd>@@.
+2.  At the =Query:= prompt, type ~(and (todo "TODO") (priority > "C"))~.
+3.  At the =Buffers/Files:= prompt, type a filename, like =~/org/main.org= (or a list of filenames, but spaces are /not/ currently handled in plain strings; use a sexp list of strings instead), or a sexp, like ~(org-agenda-files)~ (which evaluates the ~org-agenda-files~ function), or leave it blank, to use the current buffer.
+4.  At the =Group by:= prompt, select =priority=.
+
+Then a sidebar would be displayed showing all =TODO= items with priority higher than =C= in the selected files or buffers, grouped by priority, like:
+
+[[images/org-sidebar-ql.png]]
 
 *** Custom commands
 

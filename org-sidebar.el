@@ -185,6 +185,62 @@ specified, it will be set automatically."
                                                    'window-parameters (a-list 'no-delete-other-windows t)))
             (cl-incf slot)))))))
 
+;;;###autoload
+(defun org-sidebar-ql (query &optional buffers-files narrow group)
+  "Display a sidebar for `org-ql' QUERY.
+Interactively, with prefix, prompt for these variables:
+
+BUFFERS-FILES: A list of buffers and/or files to search.
+
+GROUP: A text-property symbol present in each item (e.g. when
+items are formatted by `org-ql-agenda--format-element', it might
+be `priority' or `todo-state').
+
+NARROW: Don't widen buffers before searching."
+  (interactive (progn
+                 (unless (or (equal current-prefix-arg '(4))
+                             (derived-mode-p 'org-mode))
+                   (user-error "Not an Org buffer: %s" (buffer-name)))
+                 (list (read-minibuffer "Query: ")
+                       (if (equal current-prefix-arg '(4))
+                           (--if-let (read-from-minibuffer "Buffers/Files (blank for current buffer): ")
+                               (pcase it
+                                 ("" (current-buffer))
+                                 ((rx bos "(") (-flatten (eval (read it))))
+                                 (_ (s-split (rx (1+ space)) it)))
+                             (current-buffer))
+                         (current-buffer))
+                       (not (eq current-prefix-arg '(4)))
+                       (when (equal current-prefix-arg '(4))
+                         (pcase (completing-read "Group by: "
+                                                 (list "Don't group"
+                                                       "priority"
+                                                       "todo-state"))
+                           ("Don't group" nil)
+                           (property (intern property)))))))
+  (org-sidebar :header (prin1-to-string query)
+               :fns (list (cl-function
+                           (lambda (&key group)
+                             (message "Group: %s" group)
+                             (--> (eval `(org-ql ',buffers-files
+                                           ,query
+                                           :narrow ,narrow
+                                           :markers t))
+                                  (mapcar org-sidebar-format-fn it)
+                                  (if group
+                                      (--> (--group-by (get-text-property 0 group it) it)
+                                           (-sort (-on #'string<
+                                                       (lambda (item)
+                                                         (--> (car item)
+                                                              (cl-etypecase it
+                                                                (string it)
+                                                                (number (number-to-string it))
+                                                                (null "None")))))
+                                                  it))
+                                    ;; Not grouping
+                                    it)))))
+               :group group))
+
 (defun org-sidebar-update ()
   "Update current sidebar buffer."
   (interactive)
