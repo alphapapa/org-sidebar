@@ -199,7 +199,7 @@ GROUPS should be grouped like with `-group-by'."
   (with-temp-buffer
     (--each groups
       (-let (((header . items) it))
-        (insert "\n" header "\n\n")
+        (insert "\n" (or header "None") "\n\n")
         (--each items
           (insert it "\n"))))
     (buffer-string)))
