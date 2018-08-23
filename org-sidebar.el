@@ -170,7 +170,6 @@ specified, it will be set automatically."
                           (if group
                               (funcall it :group group)
                             (funcall it)))))
-        (setq items (mapcar org-sidebar-format-fn items))
         (with-current-buffer (get-buffer-create (format " *org-sidebar: %s*" slot))
           (setq org-sidebar-source-buffer source-buffer
                 org-sidebar-group group
@@ -181,8 +180,9 @@ specified, it will be set automatically."
           (insert (cond (group (org-sidebar--format-grouped-items items))
                         ;; FIXME: Document super-groups in readme
                         (super-groups (let ((org-super-agenda-groups super-groups))
-                                        (s-join "\n" (org-super-agenda--group-items items))))
-                        (t (s-join "\n" items))))
+                                        (s-join "\n" (org-super-agenda--group-items
+                                                      (mapcar org-sidebar-format-fn items)))))
+                        (t (s-join "\n" (mapcar org-sidebar-format-fn items)))))
           (goto-char (point-min))
           (display-buffer-in-side-window (current-buffer)
                                          (a-list 'side org-sidebar-side
@@ -191,7 +191,7 @@ specified, it will be set automatically."
           (cl-incf slot))))))
 
 ;;;###autoload
-(defun org-sidebar-ql (query &optional buffers-files narrow group)
+(defun org-sidebar-ql (query &optional buffers-files narrow group sort)
   "Display a sidebar for `org-ql' QUERY.
 Interactively, with prefix, prompt for these variables:
 
@@ -201,7 +201,9 @@ GROUP: A text-property symbol present in each item (e.g. when
 items are formatted by `org-ql-agenda--format-element', it might
 be `priority' or `todo-state').
 
-NARROW: Don't widen buffers before searching."
+NARROW: Don't widen buffers before searching.
+
+SORT: One or a list of `org-ql' sorting functions, like `date' or `priority'."
   (interactive (progn
                  (unless (or (equal current-prefix-arg '(4))
                              (derived-mode-p 'org-mode))
@@ -222,24 +224,35 @@ NARROW: Don't widen buffers before searching."
                                                        "priority"
                                                        "todo-state"))
                            ("Don't group" nil)
-                           (property (intern property)))))))
+                           (property (intern (concat ":" property)))))
+                       (when (equal current-prefix-arg '(4))
+                         (pcase (completing-read "Sort by: "
+                                                 (list "Don't sort"
+                                                       "date"
+                                                       "deadline"
+                                                       "priority"
+                                                       "scheduled"
+                                                       "todo"))
+                           ("Don't sort" nil)
+                           (sort (intern sort)))))))
   (org-sidebar :header (prin1-to-string query)
                :fns (list (cl-function
                            (lambda (&key group)
-                             (message "Group: %s" group)
                              (--> (eval `(org-ql ',buffers-files
                                            ,query
                                            :narrow ,narrow
-                                           :markers t))
+                                           :markers t
+                                           :sort ,sort))
                                   (if group
-                                      (--> (--group-by (get-text-property 0 group it) it)
+                                      (--> (--group-by (org-element-property group it) it)
                                            (-sort (-on #'string<
                                                        (lambda (item)
                                                          (--> (car item)
-                                                              (cl-etypecase it
-                                                                (string it)
-                                                                (number (number-to-string it))
-                                                                (null "None")))))
+                                                              (pcase group
+                                                                (:priority (char-to-string it))
+                                                                ((pred numberp) (number-to-string it))
+                                                                ((pred null) "None")
+                                                                ((pred stringp) it)))))
                                                   it))
                                     ;; Not grouping
                                     it)))))
@@ -261,7 +274,7 @@ GROUPS should be grouped like with `-group-by'."
       (-let (((header . items) it))
         (insert "\n" (or header "None") "\n\n")
         (--each items
-          (insert it "\n"))))
+          (insert (funcall org-sidebar-format-fn it) "\n"))))
     (buffer-string)))
 
 (cl-defun org-sidebar--agenda-items (&key group)

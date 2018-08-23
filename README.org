@@ -57,8 +57,9 @@ This interactive command prompts for an [[https://github.com/alphapapa/org-ql][o
 2.  At the =Query:= prompt, type ~(and (todo "TODO") (priority > "C"))~.
 3.  At the =Buffers/Files:= prompt, type a filename, like =~/org/main.org= (or a list of filenames, but spaces are /not/ currently handled in plain strings; use a sexp list of strings instead), or a sexp, like ~(org-agenda-files)~ (which evaluates the ~org-agenda-files~ function), or leave it blank, to use the current buffer.
 4.  At the =Group by:= prompt, select =priority=.
+5.  At the =Sort by:= prompt, select =date=.
 
-Then a sidebar would be displayed showing all =TODO= items with priority higher than =C= in the selected files or buffers, grouped by priority, like:
+Then a sidebar would be displayed showing all =TODO= items with priority higher than =C= in the selected files or buffers, grouped by priority, and sorted by deadline or scheduled date, like:
 
 [[images/org-sidebar-ql.png]]
 
