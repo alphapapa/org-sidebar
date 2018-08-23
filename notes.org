@@ -307,3 +307,10 @@ This looks like it might be useful too:
   (org-super-agenda--test-with-org-today-date "2017-07-08 00:00"
     (org-sidebar))
 #+END_SRC
+
+#+BEGIN_SRC elisp
+  (org-super-agenda--test-with-org-today-date "2017-07-08 00:00"
+    (org-sidebar-ql '(and (todo "TODO") (priority > "C"))
+                    "/home/me/src/emacs/org-super-agenda/test/test.org"
+                    nil :priority 'date))
+#+END_SRC
