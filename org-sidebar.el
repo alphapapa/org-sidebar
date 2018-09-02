@@ -176,6 +176,7 @@ specified, it will be set automatically."
                 org-sidebar-super-groups super-groups
                 org-sidebar-fns fns
                 org-sidebar-header header)
+          (setq-local org-sidebar-format-fn org-sidebar-format-fn)
           (org-sidebar--prepare-buffer (or header (buffer-name source-buffer)))
           (insert (cond (group (org-sidebar--format-grouped-items items))
                         ;; FIXME: Document super-groups in readme
