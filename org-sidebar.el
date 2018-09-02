@@ -282,8 +282,8 @@ GROUPS should be grouped like with `-group-by'."
 When GROUP is non-nil, group items by date.  Items are formatted
 with `org-sidebar-format-fn'."
   (cl-flet ((date-header (item)
-                         (propertize (org-timestamp-format (or (get-text-property 0 'scheduled item)
-                                                               (get-text-property 0 'deadline item))
+                         (propertize (org-timestamp-format (or (org-element-property :scheduled item)
+                                                               (org-element-property :deadline item))
                                                            org-sidebar-date-format)
                                      'face '(:inherit variable-pitch :weight bold))))
     (--> (org-ql (current-buffer)
