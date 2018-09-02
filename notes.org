@@ -38,6 +38,10 @@ I'd like to be able to add certain nodes of interest (sometimes with child nodes
 +  defun ~org-sidebar--update-persistent~ :: Update persistent items buffer.  Erases the buffer and inserts items from ~org-sidebar-persistent-items~.
 +  defun ~org-sidebar-persistent-remove~ :: Remove item at point from persistent items buffer.
 
+** TODO Sort hierarchically
+
+Use a list of sorting functions, apply recursively, like in magit-todos.
+
 ** MAYBE Automatically update sidebar buffers
 
 For small Org buffers, it should be no problem, and might even work on a timer or a hook.  For larger ones, it becomes expensive, and will probably have to be done manually.
