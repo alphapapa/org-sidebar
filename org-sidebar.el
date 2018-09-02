@@ -310,7 +310,7 @@ formatted with `org-sidebar-format-fn'."
          :narrow t
          :markers t)
        (if group
-           (--group-by (get-text-property 0 'todo-state it) it)
+           (--group-by (org-element-property :todo-state it) it)
          it)))
 
 (defun org-sidebar--prepare-buffer (name)
