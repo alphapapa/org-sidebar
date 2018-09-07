@@ -186,9 +186,9 @@ specified, it will be set automatically."
                         (t (s-join "\n" (mapcar org-sidebar-format-fn items)))))
           (goto-char (point-min))
           (display-buffer-in-side-window (current-buffer)
-                                         (a-list 'side org-sidebar-side
-                                                 'slot slot
-                                                 'window-parameters (a-list 'no-delete-other-windows t)))
+                                         (list (cons 'side org-sidebar-side)
+                                               (cons 'slot slot)
+                                               (cons 'window-parameters (list (cons 'no-delete-other-windows t)))))
           (cl-incf slot))))))
 
 ;;;###autoload
