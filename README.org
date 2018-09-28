@@ -6,6 +6,18 @@ This package presents a helpful sidebar view for Org buffers.  At the top is a c
 
 Please note: this package is in an early stage of development, so incompatible changes may be made in the future.  However, it's stable and usable now.  Feedback is appreciated.
 
+** Contents
+:PROPERTIES:
+:TOC:      siblings
+:END:
+    -  [[#screenshots][Screenshots]]
+    -  [[#installation][Installation]]
+    -  [[#usage][Usage]]
+    -  [[#changelog][Changelog]]
+    -  [[#notes][Notes]]
+
+** Screenshots
+
 [[images/screenshot.png]]
 
 ** Installation
@@ -18,6 +30,9 @@ Install these packages (e.g. from MELPA):
 =org-ql= and =org-ql-agenda= are also required; they are not on MELPA, but may be found at [[http://github.com/alphapapa/org-ql]].  Put them and this file in your =load-path=.
 
 ** Usage
+:PROPERTIES:
+:TOC:      0
+:END:
 
 Load the package with =(require 'org-sidebar)= (or use ~use-package~).  Then call the commands below.
 
@@ -67,10 +82,31 @@ Then a sidebar would be displayed showing all =TODO= items with priority higher 
 
 For examples of defining custom sidebar commands, please see [[examples.org]].
 
+** Changelog
+:PROPERTIES:
+:TOC:      0
+:END:
+
+*** 0.1
+
+First tagged version.
+
 ** Notes
 
 This was inspired by [[https://www.reddit.com/r/emacs/comments/88mtrh/emacs_org_mode_with_atom_org_mode_design/][this /r/Emacs post]], which was inspired by [[https://github.com/MattFlower/organized/][Organized for Atom]].
 
 ** License
+:PROPERTIES:
+:TOC:      ignore
+:END:
 
 GPLv3.
+
+** COMMENT Config
+:PROPERTIES:
+:TOC:      ignore
+:END:
+
+# Local Variables:
+# before-save-hook: org-make-toc
+# End:
