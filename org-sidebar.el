@@ -191,6 +191,26 @@ specified, it will be set automatically."
                                                (cons 'window-parameters (list (cons 'no-delete-other-windows t)))))
           (cl-incf slot))))))
 
+(cl-defun org-sidebar2 (&key (buffer-fns '(org-sidebar--agenda-items-buffer org-sidebar--todo-items-buffer))
+                             group)
+  "Display the Org Sidebar.
+
+BUFFER-FNS is a list of functions which return buffers which
+should be displayed as sidebar windows.
+
+When GROUP is non-nil, call each function with the `group'
+keyword argument non-nil."
+  (interactive)
+  (let ((slot 0))
+    (--each buffer-fns
+      (when-let* ((buffer (funcall it :group group)))
+        (display-buffer-in-side-window
+         buffer
+         (list (cons 'side org-sidebar-side)
+               (cons 'slot slot)
+               (cons 'window-parameters (list (cons 'no-delete-other-windows t)))))
+        (cl-incf slot)))))
+
 ;;;###autoload
 (defun org-sidebar-ql (query &optional buffers-files narrow group sort)
   "Display a sidebar for `org-ql' QUERY.
@@ -297,6 +317,87 @@ with `org-sidebar-format-fn'."
          (if group
              (-group-by #'date-header it)
            it))))
+
+(cl-defmacro org-sidebar-def-item-buffer-fn (name description &rest body)
+  "Define a function NAME that returns a buffer-or-path containing the items returned by BODY.
+
+DESCRIPTION is a string describing what kind of items the
+function returns.  It should not be a full sentence.
+
+BODY is evaluated in the Org source buffer.  It should return a
+list of items, i.e. Org headings as returned by
+`org-element-headline-parser'.
+
+BODY is responsible for grouping items appropriately when the
+bound variable `group' is non-nil (i.e. into lists, each having
+the group header as the first element).
+
+SUPER-GROUPS may be a list of groups appropriate for the variable
+`org-super-agenda-groups', by which the items will be grouped
+when set (in which case `group' should be nil).
+
+When no grouped, items are formatted with
+`org-sidebar-format-fn'."
+  (declare (indent defun))
+  (let ((fn-name (intern (concat "org-sidebar--" (symbol-name name) "-buffer")))
+        (docstring (format "Return buffer containing %s.\n\nBUFFER defaults to `org-sidebar-source-buffer' or the current buffer.
+
+Defined with `org-sidebar-def-item-buffer-fn'."
+                           description)))
+    `(cl-defun ,fn-name (&key (buffer-or-path (or org-sidebar-source-buffer
+                                                  (current-buffer)))
+                              group super-groups)
+       ,docstring
+       (when-let* ((source-buffer (cl-typecase buffer-or-path
+                                    (buffer buffer-or-path)
+                                    (string (or (find-buffer-visiting buffer-or-path)
+                                                (find-file-noselect buffer-or-path)))))
+                   (items (with-current-buffer source-buffer
+                            ,@body))
+                   (buffer-name (format "org-sidebar: %s in %s" ,(symbol-name name) (buffer-name source-buffer)))
+                   (inhibit-read-only t))
+         (with-current-buffer (get-buffer-create buffer-name)
+           (org-sidebar--prepare-buffer buffer-name)
+           (insert (cond (group (org-sidebar--format-grouped-items items))
+                         ;; FIXME: Document super-groups in readme
+                         (super-groups (let ((org-super-agenda-groups super-groups))
+                                         (s-join "\n" (org-super-agenda--group-items
+                                                       (mapcar org-sidebar-format-fn items)))))
+                         (t (s-join "\n" (mapcar org-sidebar-format-fn items)))))
+           (goto-char (point-min))
+           (current-buffer))))))
+
+(org-sidebar-def-item-buffer-fn agenda-items
+  "agenda items"
+  (cl-flet ((date-header (item)
+                         (propertize (org-timestamp-format (or (org-element-property :scheduled item)
+                                                               (org-element-property :deadline item))
+                                                           org-sidebar-date-format)
+                                     'face '(:inherit variable-pitch :weight bold))))
+    (--> (org-ql (current-buffer)
+           (and (or (scheduled)
+                    (deadline))
+                (not (done)))
+           :sort (date priority todo)
+           :narrow t
+           :markers t)
+         (if group
+             (-group-by #'date-header it)
+           it))))
+
+(org-sidebar-def-item-buffer-fn todo-items
+  "to-do items"
+  (--> (org-ql (current-buffer)
+         (and (todo)
+              (not (or (done)
+                       (scheduled)
+                       (deadline))))
+         :sort (todo priority)
+         :narrow t
+         :markers t)
+       (if group
+           (--group-by (org-element-property :todo-state it) it)
+         it)))
 
 (cl-defun org-sidebar--to-do-items (&key group)
   "Return list of to-do items for current buffer.
