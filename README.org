@@ -87,6 +87,10 @@ For examples of defining custom sidebar commands, please see [[examples.org]].
 :TOC:      0
 :END:
 
+*** 0.2-pre
+
+Nothing yet.
+
 *** 0.1
 
 First tagged version.
