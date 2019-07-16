@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/org-sidebar
 ;; Version: 0.2-pre
-;; Package-Requires: ((emacs "25.1") (s "1.10.0") (dash "2.13") (org "9.0") (org-ql) (org-ql-agenda) (org-super-agenda "1.0"))
+;; Package-Requires: ((emacs "25.1") (s "1.10.0") (dash "2.13") (org "9.0") (org-ql) (org-super-agenda "1.0"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
@@ -224,8 +224,8 @@ BUFFER-FNS is a list of functions which return buffers which
 should be displayed as sidebar windows.
 
 When GROUP is non-nil (interactively, with one universal prefix
-argument), call each function with the `group' keyword argument
-non-nil.
+argument), and when SUPER-GROUPS is nil, call each function with
+the `group' keyword argument non-nil.
 
 SUPER-GROUPS may be a list of groups according to
 `org-super-agenda-groups', in which case the items in the buffers
