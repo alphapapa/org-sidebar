@@ -189,30 +189,30 @@ Defined with `org-sidebar-def-item-buffer-fn'."
                                                                (org-element-property :deadline item))
                                                            org-sidebar-date-format)
                                      'face '(:inherit variable-pitch :weight bold))))
-    (--> (org-ql (current-buffer)
-           (and (or (scheduled)
-                    (deadline))
-                (not (done)))
-           :sort (date priority todo)
-           :narrow t
-           :markers t)
-         (if group
-             (-group-by #'date-header it)
-           it))))
+    (let ((items (org-ql (current-buffer)
+                   (and (or (scheduled)
+                            (deadline))
+                        (not (done)))
+                   :sort (date priority todo)
+                   :narrow t
+                   :markers t)))
+      (if group
+          (-group-by #'date-header items)
+        items))))
 
 (org-sidebar-def-item-buffer-fn todo-items
   "to-do items"
-  (--> (org-ql (current-buffer)
-         (and (todo)
-              (not (or (done)
-                       (scheduled)
-                       (deadline))))
-         :sort (todo priority)
-         :narrow t
-         :markers t)
-       (if group
-           (--group-by (org-element-property :todo-state it) it)
-         it)))
+  (let ((items (org-ql (current-buffer)
+                 (and (todo)
+                      (not (or (done)
+                               (scheduled)
+                               (deadline))))
+                 :sort (todo priority)
+                 :narrow t
+                 :markers t)))
+    (if group
+        (--group-by (org-element-property :todo-keyword it) items)
+      items)))
 
 ;;;; Commands
 
@@ -297,7 +297,8 @@ SUPER-GROUPS may be a list of groups according to
 `org-super-agenda-groups', in which case the items in the buffers
 will be grouped accordingly (where applicable)."
   (interactive)
-  (let ((slot 0))
+  (let ((slot 0)
+        (group current-prefix-arg))
     (--each buffer-fns
       (when-let* ((buffer (funcall it :group group :super-groups super-groups)))
         (display-buffer-in-side-window
