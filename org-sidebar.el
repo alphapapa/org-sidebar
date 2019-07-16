@@ -217,22 +217,26 @@ Defined with `org-sidebar-def-item-buffer-fn'."
 ;;;; Commands
 
 ;;;###autoload
-(cl-defun org-sidebar (&key (buffer-fns '(org-sidebar--agenda-items-buffer org-sidebar--todo-items-buffer))
-                            group super-groups)
+(cl-defun org-sidebar (&key buffer-fns group super-groups)
   "Display the Org Sidebar.
 
 BUFFER-FNS is a list of functions which return buffers which
 should be displayed as sidebar windows.
 
-When GROUP is non-nil, call each function with the `group'
-keyword argument non-nil.
+When GROUP is non-nil (interactively, with one universal prefix
+argument), call each function with the `group' keyword argument
+non-nil.
 
 SUPER-GROUPS may be a list of groups according to
 `org-super-agenda-groups', in which case the items in the buffers
-will be grouped accordingly (where applicable)."
-  (interactive)
-  (let ((slot 0)
-        (group current-prefix-arg))
+will be grouped accordingly (where applicable).  Interactively,
+with two universal prefix arguments, the global value of
+`org-super-agenda-groups' is used."
+  (interactive (list :buffer-fns '(org-sidebar--agenda-items-buffer org-sidebar--todo-items-buffer)
+                     :group (equal current-prefix-arg '(4))
+                     :super-groups (when (equal current-prefix-arg '(16))
+                                     org-super-agenda-groups)))
+  (let ((slot 0))
     (--each buffer-fns
       (when-let* ((buffer (funcall it :group group :super-groups super-groups)))
         (display-buffer-in-side-window
