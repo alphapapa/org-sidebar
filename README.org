@@ -59,10 +59,10 @@ If the buffer is narrowed, the sidebar only shows items in the narrowed portion;
 
 When called non-interactively, these keyword arguments can be specified to override defaults:
 
-+  =:fns= :: A list of functions that return Org headline elements (as returned by ~org-element-headline-parser~).  Such functions should take a keyword argument ~:group~ which causes them to return elements grouped with the [[https://github.com/magnars/dash.el#-group-by-fn-list][-group-by]] function  (or they may omit grouping, in which case the ~:group~ argument to this function must not be used).
-+  =:group= :: Whether to call each sidebar function with the =:group= argument set.  Each sidebar function is responsible for performing its own grouping.
-+  =:super-groups= :: A list of [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] groups.  Disables the =:group= argument.
-+  =:header= :: A string to use as the sidebar window header.  Set automatically if not specified.
++  =:buffer-fns= :: A list of functions which return buffers which should be displayed as sidebar windows.
++  =:group= :: When non-nil (interactively, with one universal prefix argument), and when =SUPER-GROUPS= is nil, call each function with the =group= keyword argument non-nil.
++  =:super-groups= :: A list of [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] groups, according to =org-super-agenda-groups=, in which case the items in the buffers
+will be grouped accordingly (where applicable).  Interactively, with two universal prefix arguments, the global value of =org-super-agenda-groups= is used.
 
 **** ~org-sidebar-ql~
 
@@ -89,7 +89,9 @@ For examples of defining custom sidebar commands, please see [[examples.org]].
 
 *** 0.2-pre
 
-Nothing yet.
+*Internal*
++  Add macro ~org-sidebar-def-item-buffer-fn~, used to define functions which return sidebar buffers.
++  Function ~org-sidebar~ now takes a list of functions which return buffers, rather than functions which return Org elements.
 
 *** 0.1
 

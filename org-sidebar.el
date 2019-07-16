@@ -122,74 +122,131 @@ text properties to act on items."
   :type '(choice (const :tag "Left" left)
                  (const :tag "Right" right)))
 
+;;;; Macros
+
+(cl-defmacro org-sidebar-def-item-buffer-fn (name description &rest body)
+  "Define and return a function NAME that returns a buffer containing the items returned by BODY.
+
+If NAME is nil, returns an anonymous function.
+
+DESCRIPTION is a string describing what kind of items the
+function returns.  It should not be a full sentence.
+
+BODY is evaluated in the Org source buffer.  It should return a
+list of items, i.e. Org headings as returned by
+`org-element-headline-parser'.
+
+BODY is responsible for grouping items appropriately when the
+bound variable `group' is non-nil (i.e. into lists, each having
+the group header as the first element).
+
+SUPER-GROUPS may be a list of groups appropriate for the variable
+`org-super-agenda-groups', by which the items will be grouped
+when set (in which case `group' should be nil).
+
+When no grouped, items are formatted with
+`org-sidebar-format-fn'."
+  (declare (indent defun))
+  (let* ((fn-name (when name
+                    (intern (concat "org-sidebar--" (symbol-name name) "-buffer"))))
+         (docstring (format "Return buffer containing %s.\n\nBUFFER defaults to `org-sidebar-source-buffer' or the current buffer.
+
+Defined with `org-sidebar-def-item-buffer-fn'."
+                            description))
+         (fn-arglist `(&key (buffer-or-path (or org-sidebar-source-buffer
+                                                (current-buffer)))
+                            group super-groups))
+         (fn-body `(when-let* ((source-buffer (cl-typecase buffer-or-path
+                                                (buffer buffer-or-path)
+                                                (string (or (find-buffer-visiting buffer-or-path)
+                                                            (find-file-noselect buffer-or-path)))))
+                               (items (with-current-buffer source-buffer
+                                        ,@body))
+                               (buffer-name (format "org-sidebar: %s in %s" ,description (buffer-name source-buffer)))
+                               (inhibit-read-only t))
+                     (with-current-buffer (get-buffer-create buffer-name)
+                       (org-sidebar--prepare-buffer buffer-name)
+                       (insert (cond (group (org-sidebar--format-grouped-items items))
+                                     ;; FIXME: Document super-groups in readme
+                                     (super-groups (let ((org-super-agenda-groups super-groups))
+                                                     (s-join "\n" (org-super-agenda--group-items
+                                                                   (mapcar org-sidebar-format-fn items)))))
+                                     (t (s-join "\n" (mapcar org-sidebar-format-fn items)))))
+                       (goto-char (point-min))
+                       (current-buffer)))))
+    (cond (name `(cl-defun ,fn-name ,fn-arglist
+                   ,docstring
+                   ,fn-body))
+          (t `(cl-function
+               (lambda ,fn-arglist ,fn-body))))))
+
+;;;; Item-buffer functions
+
+(org-sidebar-def-item-buffer-fn agenda-items
+  "agenda items"
+  (cl-flet ((date-header (item)
+                         (propertize (org-timestamp-format (or (org-element-property :scheduled item)
+                                                               (org-element-property :deadline item))
+                                                           org-sidebar-date-format)
+                                     'face '(:inherit variable-pitch :weight bold))))
+    (let ((items (org-ql (current-buffer)
+                   (and (or (scheduled)
+                            (deadline))
+                        (not (done)))
+                   :sort (date priority todo)
+                   :narrow t
+                   :markers t)))
+      (if group
+          (-group-by #'date-header items)
+        items))))
+
+(org-sidebar-def-item-buffer-fn todo-items
+  "to-do items"
+  (let ((items (org-ql (current-buffer)
+                 (and (todo)
+                      (not (or (done)
+                               (scheduled)
+                               (deadline))))
+                 :sort (todo priority)
+                 :narrow t
+                 :markers t)))
+    (if group
+        (--group-by (org-element-property :todo-keyword it) items)
+      items)))
+
 ;;;; Commands
 
 ;;;###autoload
-(cl-defun org-sidebar (&key (fns '(org-sidebar--agenda-items org-sidebar--to-do-items))
-                            (group nil group-passed)
-                            super-groups
-                            header)
-  "This package presents a helpful sidebar view for Org buffers.
-At the top is a chronological list of scheduled and deadlined
-tasks in the current buffer, and below that is a list of all
-other non-done to-do items.  If the buffer is narrowed, the
-sidebar only shows items in the narrowed portion; this allows
-seeing an overview of tasks in a subtree.
+(cl-defun org-sidebar (&key buffer-fns group super-groups)
+  "Display the Org Sidebar.
 
-FNS is a list of functions that return Org headline elements (as
-returned by `org-element-headline-parser').  Such functions
-should take a keyword argument `group' which causes them to
-return elements grouped with `-group-by' (or they may omit
-grouping, in which case the GROUP argument to this function must
-not be used).  Elements returned by each function are formatted
-with `org-sidebar-format-fn'.
+BUFFER-FNS is a list of functions which return buffers which
+should be displayed as sidebar windows.
 
-GROUP specifies to call each function in FNS with its group
-keyword argument non-nil.  SUPER-GROUPS may be set instead, which
-specifies groups to be passed to `org-super-agenda'.
+When GROUP is non-nil (interactively, with one universal prefix
+argument), call each function with the `group' keyword argument
+non-nil.
 
-HEADER specifies a string to use as the header line.  If not
-specified, it will be set automatically."
-  (interactive)
-  (let ((source-buffer (if org-sidebar-updating
-                           org-sidebar-source-buffer
-                         (current-buffer)))
-        (slot 0)
-        (fns (or org-sidebar-fns
-                 fns))
-        (group (cond (group-passed group)
-                     (org-sidebar-updating org-sidebar-group)
-                     (t org-sidebar-group-items)))
-        (super-groups (or org-sidebar-super-groups
-                          super-groups))
-        (header (or org-sidebar-header
-                    header))
-        (inhibit-read-only t))
-    (--each fns
-      (when-let ((items (with-current-buffer source-buffer
-                          (if group
-                              (funcall it :group group)
-                            (funcall it)))))
-        (with-current-buffer (get-buffer-create (format " *org-sidebar: %s*" slot))
-          (setq org-sidebar-source-buffer source-buffer
-                org-sidebar-group group
-                org-sidebar-super-groups super-groups
-                org-sidebar-fns fns
-                org-sidebar-header header)
-          (setq-local org-sidebar-format-fn org-sidebar-format-fn)
-          (org-sidebar--prepare-buffer (or header (buffer-name source-buffer)))
-          (insert (cond (group (org-sidebar--format-grouped-items items))
-                        ;; FIXME: Document super-groups in readme
-                        (super-groups (let ((org-super-agenda-groups super-groups))
-                                        (s-join "\n" (org-super-agenda--group-items
-                                                      (mapcar org-sidebar-format-fn items)))))
-                        (t (s-join "\n" (mapcar org-sidebar-format-fn items)))))
-          (goto-char (point-min))
-          (display-buffer-in-side-window (current-buffer)
-                                         (list (cons 'side org-sidebar-side)
-                                               (cons 'slot slot)
-                                               (cons 'window-parameters (list (cons 'no-delete-other-windows t)))))
-          (cl-incf slot))))))
+SUPER-GROUPS may be a list of groups according to
+`org-super-agenda-groups', in which case the items in the buffers
+will be grouped accordingly (where applicable).  Interactively,
+with two universal prefix arguments, the global value of
+`org-super-agenda-groups' is used."
+  (interactive (list :buffer-fns '(org-sidebar--agenda-items-buffer org-sidebar--todo-items-buffer)
+                     :group (equal current-prefix-arg '(4))
+                     :super-groups (when (equal current-prefix-arg '(16))
+                                     org-super-agenda-groups)))
+  (let ((slot 0))
+    (--each buffer-fns
+      (when-let* ((buffer (funcall it :group (and (not super-groups)
+                                                  group)
+                                   :super-groups super-groups)))
+        (display-buffer-in-side-window
+         buffer
+         (list (cons 'side org-sidebar-side)
+               (cons 'slot slot)
+               (cons 'window-parameters (list (cons 'no-delete-other-windows t)))))
+        (cl-incf slot)))))
 
 ;;;###autoload
 (defun org-sidebar-ql (query &optional buffers-files narrow group sort)
@@ -237,26 +294,26 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or `priority'."
                            ("Don't sort" nil)
                            (sort (intern sort)))))))
   (org-sidebar :header (prin1-to-string query)
-               :fns (list (cl-function
-                           (lambda (&key group)
-                             (--> (eval `(org-ql ',buffers-files
-                                           ,query
-                                           :narrow ,narrow
-                                           :markers t
-                                           :sort ,sort))
-                                  (if group
-                                      (--> (--group-by (org-element-property group it) it)
-                                           (-sort (-on #'string<
-                                                       (lambda (item)
-                                                         (--> (car item)
-                                                              (pcase group
-                                                                (:priority (char-to-string it))
-                                                                ((pred numberp) (number-to-string it))
-                                                                ((pred null) "None")
-                                                                ((pred stringp) it)))))
-                                                  it))
-                                    ;; Not grouping
-                                    it)))))
+               :buffer-fns (list (cl-function
+                                  (lambda (&key group)
+                                    (--> (eval `(org-ql ',buffers-files
+                                                  ,query
+                                                  :narrow ,narrow
+                                                  :markers t
+                                                  :sort ,sort))
+                                         (if group
+                                             (--> (--group-by (org-element-property group it) it)
+                                                  (-sort (-on #'string<
+                                                              (lambda (item)
+                                                                (--> (car item)
+                                                                     (pcase group
+                                                                       (:priority (char-to-string it))
+                                                                       ((pred numberp) (number-to-string it))
+                                                                       ((pred null) "None")
+                                                                       ((pred stringp) it)))))
+                                                         it))
+                                           ;; Not grouping
+                                           it)))))
                :group group))
 
 (defun org-sidebar-update ()
@@ -277,42 +334,6 @@ GROUPS should be grouped like with `-group-by'."
         (--each items
           (insert (funcall org-sidebar-format-fn it) "\n"))))
     (buffer-string)))
-
-(cl-defun org-sidebar--agenda-items (&key group)
-  "Return list of agenda items for current buffer.
-When GROUP is non-nil, group items by date.  Items are formatted
-with `org-sidebar-format-fn'."
-  (cl-flet ((date-header (item)
-                         (propertize (org-timestamp-format (or (org-element-property :scheduled item)
-                                                               (org-element-property :deadline item))
-                                                           org-sidebar-date-format)
-                                     'face '(:inherit variable-pitch :weight bold))))
-    (--> (org-ql (current-buffer)
-           (and (or (scheduled)
-                    (deadline))
-                (not (done)))
-           :sort (date priority todo)
-           :narrow t
-           :markers t)
-         (if group
-             (-group-by #'date-header it)
-           it))))
-
-(cl-defun org-sidebar--to-do-items (&key group)
-  "Return list of to-do items for current buffer.
-When GROUP is non-nil, group items by to-do keyword. Items are
-formatted with `org-sidebar-format-fn'."
-  (--> (org-ql (current-buffer)
-         (and (todo)
-              (not (or (done)
-                       (scheduled)
-                       (deadline))))
-         :sort (todo priority)
-         :narrow t
-         :markers t)
-       (if group
-           (--group-by (org-element-property :todo-state it) it)
-         it)))
 
 (defun org-sidebar--prepare-buffer (name)
   "Prepare current buffer as a sidebar buffer.
