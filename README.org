@@ -89,7 +89,9 @@ For examples of defining custom sidebar commands, please see [[examples.org]].
 
 *** 0.2-pre
 
-Nothing yet.
+*Internal*
++  Add macro ~org-sidebar-def-item-buffer-fn~, used to define functions which return sidebar buffers.
++  Function ~org-sidebar~ now takes a list of functions which return buffers, rather than functions which return Org elements.
 
 *** 0.1
 
