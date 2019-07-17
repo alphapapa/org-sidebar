@@ -49,6 +49,7 @@
 ;;;; Requirements
 
 (require 'org)
+(require 'org-element)
 
 (require 'dash)
 (require 'dash-functional)
