@@ -65,8 +65,8 @@
 (defvar org-sidebar-map
   (let ((map (make-sparse-keymap))
         (mappings '(
-                    "RET" org-sidebar--jump
-                    "<mouse-1>" org-sidebar--jump
+                    "RET" org-sidebar-jump
+                    "<mouse-1>" org-sidebar-jump
                     "g" org-sidebar-update
                     "q" bury-buffer
                     )))
@@ -323,6 +323,20 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or `priority'."
   (let ((org-sidebar-updating t))
     (org-sidebar)))
 
+(defun org-sidebar-jump ()
+  "Jump to entry at sidebar buffer's point in source buffer."
+  (interactive)
+  (if-let* ((marker (get-text-property (point) 'org-marker))
+            (buffer (marker-buffer marker)))
+      (progn (--if-let (get-buffer-window buffer)
+                 (select-window it)
+               (pop-to-buffer buffer))
+             (goto-char marker)
+             (org-reveal)
+             (when org-sidebar-jump-indirect
+               (org-tree-to-indirect-buffer)))
+    (user-error "Item's buffer no longer exists")))
+
 ;;;; Functions
 
 (defun org-sidebar--format-grouped-items (groups)
@@ -348,20 +362,6 @@ Header line is set to NAME string, and
     (erase-buffer)
     (goto-char (point-min))
     (toggle-truncate-lines 1)))
-
-(defun org-sidebar--jump ()
-  "Jump to entry at sidebar buffer's point in source buffer."
-  (interactive)
-  (if-let* ((marker (get-text-property (point) 'org-marker))
-            (buffer (marker-buffer marker)))
-      (progn (--if-let (get-buffer-window buffer)
-                 (select-window it)
-               (pop-to-buffer buffer))
-             (goto-char marker)
-             (org-reveal)
-             (when org-sidebar-jump-indirect
-               (org-tree-to-indirect-buffer)))
-    (user-error "Item's buffer no longer exists")))
 
 ;;;; Macros
 
