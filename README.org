@@ -50,13 +50,15 @@ In a sidebar buffer, these keys are bound:
 
 +  ~org-sidebar~ :: ~(&key BUFFERS FNS STRUCTS GROUP SUPER-GROUPS)~ Display the Org Sidebar.
    
-   ~BUFFERS~ may be a list of existing buffers to display in the sidebar.
+   Interactively, display the sidebars configured in ~org-sidebar-default-fns~.
    
-   ~FNS~ may be a list of functions, each of which may return a buffer or a ~org-sidebar-items~ struct.
+   ~BUFFERS~ may be one or a list of buffers to display in the sidebar.
    
-   ~STRUCTS~ may be one or a list of ~org-sidebar-items~ structs.
+   ~FNS~ may be one or a list of functions, each of which may return a buffer or a ~org-sidebar~ struct.
+
+   ~SIDEBARS~ may be one or a list of ~org-sidebar~ structs.
    
-   ~When ~GROUP~ is non-nil (interactively, with one universal prefix argument), and when ~SUPER-GROUPS~ is nil, call each function with the ~group~ keyword argument non-nil.
+   When ~GROUP~ is non-nil (interactively, with one universal prefix argument), and when ~SUPER-GROUPS~ is nil, call each function with the ~group~ keyword argument non-nil.
    
    ~SUPER-GROUPS~ may be a list of groups according to ~org-super-agenda-groups~, in which case the items in the buffers will be grouped accordingly (where applicable).  Interactively, with two universal prefix arguments, the global value of ~org-super-agenda-groups~ is used.
 +  ~org-sidebar-ql~ :: ~(&key QUERY BUFFERS-FILES NARROW GROUP-PROPERTY SORT)~ Display a sidebar for ~org-ql~ ~QUERY~.  Interactively, with prefix, prompt for these variables:

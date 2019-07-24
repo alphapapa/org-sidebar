@@ -150,11 +150,11 @@ text properties to act on items."
 Interactively, display the sidebars configured in
 `org-sidebar-default-fns'.
 
-BUFFERS may be a list of existing buffers to display in the
+BUFFERS may be one or a list of buffers to display in the
 sidebar.
 
-FNS may be a list of functions, each of which may return a buffer
-or a `org-sidebar' struct.
+FNS may be one or a list of functions, each of which may return a
+buffer or a `org-sidebar' struct.
 
 SIDEBARS may be one or a list of `org-sidebar' structs.
 
@@ -171,15 +171,21 @@ with two universal prefix arguments, the global value of
                      :group (equal current-prefix-arg '(4))
                      :super-groups (when (equal current-prefix-arg '(16))
                                      org-super-agenda-groups)))
-  (let* ((fns-buffers (cl-loop for fn in fns
-                               for result = (funcall fn :group group :super-groups super-groups)
-                               when result
-                               collect (cl-typecase result
-                                         (buffer result)
-                                         (org-sidebar (org-sidebar--items-buffer result)))))
-         (sidebars (cl-typecase sidebars
+  (let* ((buffers (cl-etypecase buffers
+                    (list buffers)
+                    (buffer (list buffers))))
+         (fns (cl-etypecase fns
+                (list fns)
+                (function (list fns))))
+         (sidebars (cl-etypecase sidebars
                      (list sidebars)
                      (org-sidebar (list sidebars))))
+         (fns-buffers (cl-loop for fn in fns
+                               for result = (funcall fn :group group :super-groups super-groups)
+                               when result
+                               collect (cl-etypecase result
+                                         (buffer result)
+                                         (org-sidebar (org-sidebar--items-buffer result)))))
          (sidebars-buffers (-map #'org-sidebar--items-buffer sidebars))
          (buffers (append buffers fns-buffers sidebars-buffers)))
     (org-sidebar--display-buffers buffers)))
