@@ -138,14 +138,19 @@ text properties to act on items."
 ;;;; Commands
 
 ;;;###autoload
-(cl-defun org-sidebar (&key buffers fns group super-groups)
+(cl-defun org-sidebar (&key buffers fns structs group super-groups)
   "Display the Org Sidebar.
+
+Interactively, display the sidebars configured in
+`org-sidebar-default-fns'.
 
 BUFFERS may be a list of existing buffers to display in the
 sidebar.
 
 FNS may be a list of functions, each of which may return a buffer
 or a `org-sidebar-items' struct.
+
+STRUCTS may be one or a list of `org-sidebar-items' structs.
 
 When GROUP is non-nil (interactively, with one universal prefix
 argument), and when SUPER-GROUPS is nil, call each function with
@@ -166,7 +171,11 @@ with two universal prefix arguments, the global value of
                                collect (cl-typecase result
                                          (buffer result)
                                          (org-sidebar-items (org-sidebar--items-buffer result)))))
-         (buffers (append buffers fns-buffers)))
+         (structs (cl-typecase structs
+                    (list structs)
+                    (org-sidebar-items (list structs))))
+         (structs-buffers (-map #'org-sidebar--items-buffer structs))
+         (buffers (append buffers fns-buffers structs-buffers)))
     (org-sidebar--display-buffers buffers)))
 
 ;;;###autoload
