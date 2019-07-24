@@ -4,14 +4,21 @@
 
 ** Custom sidebar command
 
-It's easy to define a custom sidebar command.  Here's an example that shows items in =org-agenda-files= that are not done and either have a deadline on or before today, or are scheduled for today.  It defines a command named ~my-sidebar~.  The query (~(and ...~) uses [[https://github.com/alphapapa/org-agenda-ng][org-ql]] to select items.
+It's easy to define a custom sidebar command.  Here's an example that shows items in =org-agenda-files= that are not done and either have a deadline on or before today, or are scheduled for today.  The query (~(and ...~) uses [[https://github.com/alphapapa/org-agenda-ng][org-ql]] to select items.
 
 #+BEGIN_SRC elisp
-  (org-sidebar-defsidebar my-sidebar
-    :header "My Sidebar"
-    :sidebars ((and (not (done))
-                    (or (deadline <=)
-                        (date = today)))))
+  (defun my/org-sidebar ()
+    "Display my Org Sidebar."
+    (interactive)
+    (org-sidebar
+     :structs (make-org-sidebar-items
+               :name "My Sidebar"
+               :description "My sidebar items"
+               :items (org-ql (org-agenda-files)
+                        (and (not (done))
+                             (or (deadline <=)
+                                 (date = today)))
+                        :markers t))))
 #+END_SRC
 
 ** Grouping with =org-super-agenda=
@@ -19,19 +26,26 @@ It's easy to define a custom sidebar command.  Here's an example that shows item
 =org-sidebar= also integrates with [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]].  This command is like the previous one, but it groups items with =org-super-agenda= into several groups.
 
 #+BEGIN_SRC elisp
-  (org-sidebar-defsidebar today-sidebar
-    :header "Today"
-    :sidebars (((and (not (done))
-                     (or (deadline <=)
-                         (scheduled <=)
-                         (date = today)))))
-    :super-groups '((:time-grid t)
-                    (:name "Overdue" :scheduled past :deadline past)
-                    (:name "Due today" :scheduled today :deadline today)
-                    (:tag "bills")
-                    (:priority "A")
-                    (:name "Non-tasks"
-                           :todo nil)))
+  (defun my/org-today-sidebar ()
+    "Show my Org Today Sidebar."
+    (interactive)
+    (org-sidebar
+     :structs (make-org-sidebar-items
+               :name "Today"
+               :description "Today items"
+               :items (org-ql (org-agenda-files)
+                        (and (not (done))
+                             (or (deadline <=)
+                                 (scheduled <=)
+                                 (date = today)))
+                        :markers t)
+               :super-groups '((:time-grid t)
+                               (:name "Overdue" :scheduled past :deadline past)
+                               (:name "Due today" :scheduled today :deadline today)
+                               (:tag "bills")
+                               (:priority "A")
+                               (:name "Non-tasks"
+                                      :todo nil)))))
 #+END_SRC
 
 This shows a sidebar like this:
@@ -42,9 +56,9 @@ This shows a sidebar like this:
 
 #+BEGIN_SRC elisp :exports none
   (org-super-agenda--test-with-org-today-date "2017-07-05 12:00"
-    (org-super-agenda--test-with-mock-functions ((org-agenda-files (lambda ()
+    (org-super-agenda--test-with-mock-functions ((org-agenda-files (lambda (&rest ignore)
                                                                      '("/home/me/src/emacs/org-super-agenda/test/test.org"))))
-      (today-sidebar)))
+      (my/org-today-sidebar)))
 #+END_SRC
 
 
