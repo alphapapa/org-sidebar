@@ -131,14 +131,20 @@ text properties to act on items."
 
 ;;;; Structs
 
-(cl-defstruct org-sidebar-items
-  ;; Naming things is hard.  Maybe this will help organize things...
+(cl-defstruct org-sidebar
+  ;; Naming things is hard.  Maybe this will help organize things.
+
+  ;; This struct is intended to be made at runtime.  The ITEMS slot should be
+  ;; the result of an `org-ql' query with its MARKERS argument non-nil.  See
+  ;; default item functions.  The struct is passed by function `org-sidebar'
+  ;; to function `org-sidebar--items-buffer', which returns a buffer
+  ;; displaying the struct's items.
   name description items group-fn super-groups)
 
 ;;;; Commands
 
 ;;;###autoload
-(cl-defun org-sidebar (&key buffers fns structs group super-groups)
+(cl-defun org-sidebar (&key buffers fns sidebars group super-groups)
   "Display the Org Sidebar.
 
 Interactively, display the sidebars configured in
@@ -148,9 +154,9 @@ BUFFERS may be a list of existing buffers to display in the
 sidebar.
 
 FNS may be a list of functions, each of which may return a buffer
-or a `org-sidebar-items' struct.
+or a `org-sidebar' struct.
 
-STRUCTS may be one or a list of `org-sidebar-items' structs.
+SIDEBARS may be one or a list of `org-sidebar' structs.
 
 When GROUP is non-nil (interactively, with one universal prefix
 argument), and when SUPER-GROUPS is nil, call each function with
@@ -170,12 +176,12 @@ with two universal prefix arguments, the global value of
                                when result
                                collect (cl-typecase result
                                          (buffer result)
-                                         (org-sidebar-items (org-sidebar--items-buffer result)))))
-         (structs (cl-typecase structs
-                    (list structs)
-                    (org-sidebar-items (list structs))))
-         (structs-buffers (-map #'org-sidebar--items-buffer structs))
-         (buffers (append buffers fns-buffers structs-buffers)))
+                                         (org-sidebar (org-sidebar--items-buffer result)))))
+         (sidebars (cl-typecase sidebars
+                     (list sidebars)
+                     (org-sidebar (list sidebars))))
+         (sidebars-buffers (-map #'org-sidebar--items-buffer sidebars))
+         (buffers (append buffers fns-buffers sidebars-buffers)))
     (org-sidebar--display-buffers buffers)))
 
 ;;;###autoload
@@ -225,24 +231,24 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
                                                              "todo"))
                                  ("Don't sort" nil)
                                  (sort (intern sort)))))))
-  (org-sidebar :fns (list (lambda (&rest _ignore)
-                            (make-org-sidebar-items
-                             :items (org-ql-query buffers-files
-                                      query
-                                      :narrow narrow
-                                      :sort sort
-                                      ;; MAYBE: In `org-ql-query' make default action, or support :markers arg.
-                                      :action (lambda ()
-                                                (org-ql--add-markers
-                                                 (org-element-headline-parser (line-end-position)))))
-                             :name (prin1-to-string query)
-                             :super-groups (list (pcase group-property
-                                                   ('nil nil)
-                                                   ('category '(:auto-category))
-                                                   ('parent '(:auto-parent))
-                                                   ('priority '(:auto-priority))
-                                                   ('todo-keyword '(:auto-todo)))))))
-               :group group-property))
+  (org-sidebar
+   :sidebars (make-org-sidebar
+              :items (org-ql-query buffers-files
+                       query
+                       :narrow narrow
+                       :sort sort
+                       ;; MAYBE: In `org-ql-query' make default action, or support :markers arg.
+                       :action (lambda ()
+                                 (org-ql--add-markers
+                                  (org-element-headline-parser (line-end-position)))))
+              :name (prin1-to-string query)
+              :super-groups (list (pcase group-property
+                                    ('nil nil)
+                                    ('category '(:auto-category))
+                                    ('parent '(:auto-parent))
+                                    ('priority '(:auto-priority))
+                                    ('todo-keyword '(:auto-todo)))))
+   :group group-property))
 
 (defun org-sidebar-update ()
   "Update current sidebar buffer."
@@ -280,9 +286,9 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
 
 (cl-defun org-sidebar--items-buffer (items)
   "Return a buffer containing ITEMS, ready to be displayed.
-ITEMS should be an `org-sidebar-items' struct.
+ITEMS should be an `org-sidebar' struct.
 FIXME: Note that group-fn and super-groups can't both be set.  Or figure out a smart way to handle it."
-  (pcase-let* (((cl-struct org-sidebar-items name description items group-fn super-groups) items)
+  (pcase-let* (((cl-struct org-sidebar name description items group-fn super-groups) items)
                (buffer-name (propertize name 'help-echo description))
                (string (cond (group-fn (->> items
                                             (-group-by group-fn)
@@ -335,7 +341,7 @@ The `org-ql' query is:
     (and (or (scheduled)
              (deadline))
          (not (done)))"
-  (make-org-sidebar-items
+  (make-org-sidebar
    :name (concat "Upcoming items in " (buffer-name))
    :description "Not-done items with a deadline or scheduled date in the current buffer"
    ;; NOTE: This commented code produces date headers that are more visually pleasing
@@ -358,7 +364,7 @@ The `org-ql' query is:
 
 (defun org-sidebar--todo-items (&rest _ignore)
   "Return incomplete to-do items without scheduled dates or deadlines in current buffer."
-  (make-org-sidebar-items
+  (make-org-sidebar
    :name (concat "To-do items in " (buffer-name))
    :description "Unscheduled to-do keyword items without a deadline in the current buffer"
    :items (org-ql (current-buffer)

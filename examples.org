@@ -11,14 +11,14 @@ It's easy to define a custom sidebar command.  Here's an example that shows item
     "Display my Org Sidebar."
     (interactive)
     (org-sidebar
-     :structs (make-org-sidebar-items
-               :name "My Sidebar"
-               :description "My sidebar items"
-               :items (org-ql (org-agenda-files)
-                        (and (not (done))
-                             (or (deadline <=)
-                                 (date = today)))
-                        :markers t))))
+     :sidebars (make-org-sidebar
+                :name "My Sidebar"
+                :description "My sidebar items"
+                :items (org-ql (org-agenda-files)
+                         (and (not (done))
+                              (or (deadline <=)
+                                  (date = today)))
+                         :markers t))))
 #+END_SRC
 
 ** Grouping with =org-super-agenda=
@@ -30,22 +30,22 @@ It's easy to define a custom sidebar command.  Here's an example that shows item
     "Show my Org Today Sidebar."
     (interactive)
     (org-sidebar
-     :structs (make-org-sidebar-items
-               :name "Today"
-               :description "Today items"
-               :items (org-ql (org-agenda-files)
-                        (and (not (done))
-                             (or (deadline <=)
-                                 (scheduled <=)
-                                 (date = today)))
-                        :markers t)
-               :super-groups '((:time-grid t)
-                               (:name "Overdue" :scheduled past :deadline past)
-                               (:name "Due today" :scheduled today :deadline today)
-                               (:tag "bills")
-                               (:priority "A")
-                               (:name "Non-tasks"
-                                      :todo nil)))))
+     :sidebars (make-org-sidebar
+                :name "Today"
+                :description "Today items"
+                :items (org-ql (org-agenda-files)
+                         (and (not (done))
+                              (or (deadline <=)
+                                  (scheduled <=)
+                                  (date = today)))
+                         :markers t)
+                :super-groups '((:time-grid t)
+                                (:name "Overdue" :scheduled past :deadline past)
+                                (:name "Due today" :scheduled today :deadline today)
+                                (:tag "bills")
+                                (:priority "A")
+                                (:name "Non-tasks"
+                                       :todo nil)))))
 #+END_SRC
 
 This shows a sidebar like this:
