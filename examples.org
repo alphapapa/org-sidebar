@@ -18,7 +18,7 @@ It's easy to define a custom sidebar command.  Here's an example that shows item
                          (and (not (done))
                               (or (deadline <=)
                                   (date = today)))
-                         :markers t))))
+                         :action element-with-markers))))
 #+END_SRC
 
 ** Grouping with =org-super-agenda=
@@ -38,7 +38,7 @@ It's easy to define a custom sidebar command.  Here's an example that shows item
                               (or (deadline <=)
                                   (scheduled <=)
                                   (date = today)))
-                         :markers t)
+                         :action element-with-markers)
                 :super-groups '((:time-grid t)
                                 (:name "Overdue" :scheduled past :deadline past)
                                 (:name "Due today" :scheduled today :deadline today)
