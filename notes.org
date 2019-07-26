@@ -25,6 +25,10 @@ e.g. emphasis like =code= isn't applied, so the raw syntax is visible.
 
 * Ideas
 
+** TODO [#A] Use ~org-ql-agenda~
+
+Rather than formatting and making buffers in this package, ~org-ql-agenda~ does that.  All we need to do is direct its output to buffers that we then display in sidebars.  This will entail another refactoring.
+
 ** TODO Persistent list of nodes/searches
 
 I'd like to be able to add certain nodes of interest (sometimes with child nodes) to a sidebar.  It would also be nice to be able to add "views" or agenda searches for tags, etc (inspired by [[https://raw.githubusercontent.com/wakatara/HelvetiCan-Taskpaper-theme/master/HelvetiCan_taskpaper_theme_preview.png][this screenshot]]).
