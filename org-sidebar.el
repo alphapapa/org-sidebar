@@ -239,14 +239,12 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
                                  (sort (intern sort)))))))
   (org-sidebar
    :sidebars (make-org-sidebar
-              :items (org-ql-query buffers-files
-                       query
+              :items (org-ql-query
+                       :select 'element-with-markers
+                       :from buffers-files
+                       :where query
                        :narrow narrow
-                       :sort sort
-                       ;; MAYBE: In `org-ql-query' make default action, or support :markers arg.
-                       :action (lambda ()
-                                 (org-ql--add-markers
-                                  (org-element-headline-parser (line-end-position)))))
+                       :order-by sort)
               :name (prin1-to-string query)
               :super-groups (list (pcase group-property
                                     ('nil nil)
@@ -360,13 +358,12 @@ The `org-ql' query is:
    ;;                                               org-sidebar-date-format)
    ;;                         'face '(:inherit variable-pitch :weight bold)))
    :super-groups '((:auto-date))
-   :items (org-ql (current-buffer)
-            (and (or (scheduled)
-                     (deadline))
-                 (not (done)))
-            :sort date
-            :narrow t
-            :markers t)))
+   :items (org-ql-select (current-buffer)
+            '(and (or (scheduled)
+                      (deadline))
+                  (not (done)))
+            :action 'element-with-markers
+            :narrow t :sort 'date)))
 
 (defun org-sidebar--todo-items (&rest _ignore)
   "Return incomplete to-do items without scheduled dates or deadlines in current buffer."
@@ -380,7 +377,7 @@ The `org-ql' query is:
                           (deadline))))
             :sort (todo priority)
             :narrow t
-            :markers t)
+            :action element-with-markers)
    :super-groups '((:auto-todo))))
 
 ;;;; Footer
