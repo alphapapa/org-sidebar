@@ -357,7 +357,7 @@ The `org-ql' query is:
    ;;                                                   (org-element-property :deadline item))
    ;;                                               org-sidebar-date-format)
    ;;                         'face '(:inherit variable-pitch :weight bold)))
-   :super-groups '((:auto-date))
+   :super-groups '((:auto-planning))
    :items (org-ql-select (current-buffer)
             '(and (or (scheduled)
                       (deadline))
