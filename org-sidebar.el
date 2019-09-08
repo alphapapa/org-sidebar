@@ -266,13 +266,15 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
   (interactive)
   (if-let* ((marker (get-text-property (point) 'org-marker))
             (buffer (marker-buffer marker)))
-      (progn (--if-let (get-buffer-window buffer)
-                 (select-window it)
-               (pop-to-buffer buffer))
-             (goto-char marker)
-             (org-reveal)
-             (when org-sidebar-jump-indirect
-               (org-tree-to-indirect-buffer)))
+      (progn
+        (--if-let (get-buffer-window buffer)
+            (select-window it)
+          (pop-to-buffer buffer))
+        (goto-char marker)
+        (org-reveal)
+        (org-show-entry)
+        (when org-sidebar-jump-indirect
+          (org-tree-to-indirect-buffer)))
     (user-error "Item's buffer no longer exists")))
 
 ;;;; Functions
