@@ -341,46 +341,49 @@ Header line is set to NAME string, and
 ;;;;; Default item functions
 
 (cl-defun org-sidebar--upcoming-items (&rest _ignore)
-  "Return upcoming items in current buffer.
+  "Return `org-sidebar' struct for upcoming items in current buffer.
+If no items are found, return nil.
 The `org-ql' query is:
 
     (and (or (scheduled)
              (deadline))
          (not (done)))"
-  (make-org-sidebar
-   :name (concat "Upcoming items in " (buffer-name))
-   :description "Not-done items with a deadline or scheduled date in the current buffer"
-   ;; NOTE: This commented code produces date headers that are more visually pleasing
-   ;; to me, but since moving the functionality into `org-super-agenda', it probably
-   ;; doesn't make sense to do this here.  But I'm going to keep the code here for now.
-   ;; :group-fn (lambda (item)
-   ;;             ;; Return a date header string for grouping.
-   ;;             (propertize (org-timestamp-format (or (org-element-property :scheduled item)
-   ;;                                                   (org-element-property :deadline item))
-   ;;                                               org-sidebar-date-format)
-   ;;                         'face '(:inherit variable-pitch :weight bold)))
-   :super-groups '((:auto-planning))
-   :items (org-ql-select (current-buffer)
-            '(and (or (scheduled)
-                      (deadline))
-                  (not (done)))
-            :action 'element-with-markers
-            :narrow t :sort 'date)))
+  (when-let* ((items (org-ql-select (current-buffer)
+                       '(and (or (scheduled)
+                                 (deadline))
+                             (not (done)))
+                       :action 'element-with-markers
+                       :narrow t :sort 'date)))
+    (make-org-sidebar
+     :name (concat "Upcoming items in " (buffer-name))
+     :description "Non-done items with a deadline or scheduled date in the current buffer"
+     ;; NOTE: This commented code produces date headers that are more visually pleasing
+     ;; to me, but since moving the functionality into `org-super-agenda', it probably
+     ;; doesn't make sense to do this here.  But I'm going to keep the code here for now.
+     ;; :group-fn (lambda (item)
+     ;;             ;; Return a date header string for grouping.
+     ;;             (propertize (org-timestamp-format (or (org-element-property :scheduled item)
+     ;;                                                   (org-element-property :deadline item))
+     ;;                                               org-sidebar-date-format)
+     ;;                         'face '(:inherit variable-pitch :weight bold)))
+     :super-groups '((:auto-planning))
+     :items items)))
 
 (defun org-sidebar--todo-items (&rest _ignore)
-  "Return incomplete to-do items without scheduled dates or deadlines in current buffer."
-  (make-org-sidebar
-   :name (concat "To-do items in " (buffer-name))
-   :description "Unscheduled to-do keyword items without a deadline in the current buffer"
-   :items (org-ql (current-buffer)
-            (and (todo)
-                 (not (or (done)
-                          (scheduled)
-                          (deadline))))
-            :sort (todo priority)
-            :narrow t
-            :action element-with-markers)
-   :super-groups '((:auto-todo))))
+  "Return `org-sidebar' struct for unscheduled, un-deadlined to-do items in current buffer.
+If no items are found, return nil."
+  (when-let* ((items (org-ql-select (current-buffer)
+                       '(and (todo)
+                             (not (or (scheduled)
+                                      (deadline))))
+                       :sort '(priority todo)
+                       :narrow t
+                       :action 'element-with-markers)))
+    (make-org-sidebar
+     :name (concat "To-do items in " (buffer-name))
+     :description "Unscheduled, un-deadlined to-do items in current buffer."
+     :items items
+     :super-groups '((:auto-todo)))))
 
 ;;;; Footer
 
