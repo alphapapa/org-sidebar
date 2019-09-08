@@ -356,7 +356,7 @@ GROUPS should be grouped like with `-group-by'."
 Header line is set to NAME string, and
 `org-sidebar-source-buffer' is set to SOURCE-BUFFER."
   (let ((inhibit-read-only t))
-    (setq header-line-format (propertize name 'face '(:inherit org-agenda-date-today))
+    (setq header-line-format (concat " " name)
           mode-line-format nil)
     (read-only-mode 1)
     (use-local-map org-sidebar-map)
