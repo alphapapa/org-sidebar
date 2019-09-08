@@ -138,11 +138,11 @@ text properties to act on items."
 (cl-defstruct org-sidebar
   ;; Naming things is hard.  Maybe this will help organize things.
 
-  ;; This struct is intended to be made at runtime.  The ITEMS slot should be
-  ;; the result of an `org-ql' query with its MARKERS argument non-nil.  See
-  ;; default item functions.  The struct is passed by function `org-sidebar'
-  ;; to function `org-sidebar--items-buffer', which returns a buffer
-  ;; displaying the struct's items.
+  ;; This struct is intended to be made at runtime.  The ITEMS slot should
+  ;; be the result of an `org-ql' query with ACTION `element-with-markers'.
+  ;; See default item functions.  The struct is passed by function
+  ;; `org-sidebar' to function `org-sidebar--items-buffer', which returns a
+  ;; buffer displaying the struct's items.
   name description items group-fn super-groups)
 
 ;;;; Commands
