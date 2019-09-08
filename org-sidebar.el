@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; Url: http://github.com/alphapapa/org-sidebar
 ;; Version: 0.2-pre
-;; Package-Requires: ((emacs "25.1") (s "1.10.0") (dash "2.13") (dash-functional "1.2.0") (org "9.0") (org-ql "0.2") (org-super-agenda "1.0"))
+;; Package-Requires: ((emacs "26.1") (s "1.10.0") (dash "2.13") (dash-functional "1.2.0") (org "9.0") (org-ql "0.2") (org-super-agenda "1.0"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
@@ -50,6 +50,7 @@
 
 (require 'org)
 (require 'org-element)
+(require 'subr-x)
 
 (require 'dash)
 (require 'dash-functional)
@@ -125,7 +126,7 @@ text properties to act on items."
                  (const :tag "Right" right)))
 
 (defcustom org-sidebar-default-fns '(org-sidebar--upcoming-items org-sidebar--todo-items)
-  "FIXME: docstring"
+  "Default sidebar functions."
   :type '(choice (const :tag "Upcoming items" org-sidebar--upcoming-items)
                  (const :tag "To-do items" org-sidebar--todo-items)
                  (function :tag "Other function")))
@@ -395,7 +396,7 @@ The `org-ql' query is:
      :items items)))
 
 (defun org-sidebar--todo-items (&rest _ignore)
-  "Return `org-sidebar' struct for unscheduled, un-deadlined to-do items in current buffer.
+  "Return sidebar for unscheduled, un-deadlined to-do items in current buffer.
 If no items are found, return nil."
   (when-let* ((items (org-ql-select (current-buffer)
                        '(and (todo)
