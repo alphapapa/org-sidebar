@@ -72,6 +72,16 @@ e.g. in the current window layout, if the Org buffer displayed in the main windo
 
 e.g. changing TODO keyword, etc.  It would be good to reuse as much Org Agenda functionality as possible, but since they aren't actual agenda buffers (and since I think Org only allows one actual Agenda buffer), that may not be possible.
 
+** MAYBE Combine org-now and org-sidebar?
+:PROPERTIES:
+:ID:       43a3ab88-ca28-43c0-ac22-e929bed2511a
+:END:
+:LOGBOOK:
+-  State "MAYBE"      from "TODO"       [2019-09-08 Sun 15:33]
+:END:
+
+Seems like org-now should be rolled into org-sidebar as one of the panes that can be displayed.
+
 ** DONE Emacs 26 side windows
 CLOSED: [2018-08-02 Thu 11:03]
 :LOGBOOK:
@@ -306,7 +316,6 @@ This looks like it might be useful too:
      with C-u. For example, [C-u C-x b] calls
      `switch-buffer-without-purpose'.
 #+END_EXAMPLE
-
 * Code
 
 ** Testing
