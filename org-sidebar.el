@@ -1,7 +1,7 @@
 ;;; org-sidebar.el --- Helpful sidebar for Org buffers  -*- lexical-binding: t; -*-
 
 ;; Author: Adam Porter <adam@alphapapa.net>
-;; Url: http://github.com/alphapapa/org-sidebar
+;; URL: https://github.com/alphapapa/org-sidebar
 ;; Version: 0.2-pre
 ;; Package-Requires: ((emacs "26.1") (s "1.10.0") (dash "2.13") (dash-functional "1.2.0") (org "9.0") (org-ql "0.2") (org-super-agenda "1.0"))
 ;; Keywords: hypermedia, outlines, Org, agenda
@@ -97,7 +97,8 @@
 
 (defgroup org-sidebar nil
   "Options for `org-sidebar'."
-  :group 'org)
+  :group 'org
+  :link '(url-link "https://github.com/alphapapa/org-sidebar"))
 
 (defcustom org-sidebar-group-items t
   "Group items by default."
