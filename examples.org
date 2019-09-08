@@ -16,8 +16,8 @@ It's easy to define a custom sidebar command.  Here's an example that shows item
                 :description "My sidebar items"
                 :items (org-ql (org-agenda-files)
                          (and (not (done))
-                              (or (deadline <=)
-                                  (date = today)))
+                              (or (deadline auto)
+                                  (scheduled :on today)))
                          :action element-with-markers))))
 #+END_SRC
 
@@ -35,9 +35,8 @@ It's easy to define a custom sidebar command.  Here's an example that shows item
                 :description "Today items"
                 :items (org-ql (org-agenda-files)
                          (and (not (done))
-                              (or (deadline <=)
-                                  (scheduled <=)
-                                  (date = today)))
+                              (or (deadline auto)
+                                  (scheduled :to today)))
                          :action element-with-markers)
                 :super-groups '((:time-grid t)
                                 (:name "Overdue" :scheduled past :deadline past)
