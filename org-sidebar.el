@@ -67,7 +67,7 @@
         (mappings '(
                     "RET" org-sidebar-jump
                     "<mouse-1>" org-sidebar-jump
-                    "g" org-sidebar-update
+                    "g" org-sidebar-refresh
                     "q" bury-buffer
                     )))
     (cl-loop for (key fn) on mappings by #'cddr
@@ -75,12 +75,13 @@
     map)
   "Keymap for `org-sidebar' buffers.")
 
-(defvar org-sidebar-updating nil
-  "Is non-nil when updating a sidebar.")
-
-;; MAYBE: Use a list of variables, stored as an alist in a single variable.
+;; Buffer-local vars for refreshing sidebars.
 (defvar-local org-sidebar-source-buffer nil
   "The source Org buffer for entries in this sidebar buffer.")
+(defvar-local org-sidebar-buffers nil
+  "The `buffers' argument to `org-sidebar'.")
+(defvar-local org-sidebar-sidebars nil
+  "The `sidebars' argument to `org-sidebar'.")
 (defvar-local org-sidebar-group nil
   "The group setting for entries in this sidebar buffer.")
 (defvar-local org-sidebar-super-groups nil
@@ -171,7 +172,8 @@ with two universal prefix arguments, the global value of
                      :group (equal current-prefix-arg '(4))
                      :super-groups (when (equal current-prefix-arg '(16))
                                      org-super-agenda-groups)))
-  (let* ((buffers (cl-etypecase buffers
+  (let* ((source-buffer (current-buffer))
+         (buffers (cl-etypecase buffers
                     (list buffers)
                     (buffer (list buffers))))
          (fns (cl-etypecase fns
@@ -187,8 +189,17 @@ with two universal prefix arguments, the global value of
                                          (buffer result)
                                          (org-sidebar (org-sidebar--items-buffer result)))))
          (sidebars-buffers (-map #'org-sidebar--items-buffer sidebars))
-         (buffers (append buffers fns-buffers sidebars-buffers)))
-    (org-sidebar--display-buffers buffers)))
+         (display-buffers (append buffers fns-buffers sidebars-buffers)))
+    (--each display-buffers
+      ;; Save settings in buffers for refreshing.
+      (with-current-buffer it
+        (setf org-sidebar-source-buffer source-buffer
+              org-sidebar-buffers buffers
+              org-sidebar-fns fns
+              org-sidebar-sidebars sidebars
+              org-sidebar-group group
+              org-sidebar-super-groups super-groups)))
+    (org-sidebar--display-buffers display-buffers)))
 
 ;;;###autoload
 (cl-defun org-sidebar-ql (&key query buffers-files narrow group-property sort)
@@ -254,12 +265,22 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
                                     ('todo-keyword '(:auto-todo)))))
    :group group-property))
 
-(defun org-sidebar-update ()
-  "Update current sidebar buffer."
-  ;; FIXME: Test and fix, might not work anymore.
+(defun org-sidebar-refresh ()
+  "Refresh current sidebar buffers."
   (interactive)
-  (let ((org-sidebar-updating t))
-    (org-sidebar)))
+  ;; `org-sidebar' needs to be called in the original source buffer, but we
+  ;; need to get the saved arguments that are stored in the sidebar buffer.
+  (let ((buffers org-sidebar-buffers)
+        (fns org-sidebar-fns)
+        (group org-sidebar-group)
+        (super-groups org-sidebar-super-groups))
+    (save-excursion
+      (when org-sidebar-source-buffer
+        (switch-to-buffer org-sidebar-source-buffer))
+      (org-sidebar :buffers buffers
+                   :fns fns
+                   :group group
+                   :super-groups super-groups))))
 
 (defun org-sidebar-jump ()
   "Jump to entry at sidebar buffer's point in source buffer."
@@ -281,6 +302,10 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
 
 (cl-defun org-sidebar--display-buffers (buffers)
   "Display BUFFERS in the sidebar."
+  (--each (window-at-side-list nil org-sidebar-side)
+    ;; Delete existing org-sidebar windows on our side.
+    (when (buffer-local-value 'org-sidebar-source-buffer (window-buffer it))
+      (delete-window it)))
   (let ((slot 0))
     (--each buffers
       (display-buffer-in-side-window
