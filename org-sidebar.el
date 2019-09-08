@@ -8,26 +8,27 @@
 
 ;;; Commentary:
 
-;; This package presents a helpful sidebar view for Org buffers.  At the top is a chronological list
-;; of scheduled and deadlined tasks in the current buffer (similar to the Org agenda ,but without
-;; all its features), and below that is a list of all other non-done to-do items.  If the buffer is
-;; narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of
-;; tasks in a subtree.
+;; This package presents a helpful sidebar view for Org buffers.
+;; Sidebars are customizable using `org-ql' queries and
+;; `org-super-agenda' grouping.
 
-;; NOTE: Please note: this package is in an early stage of development, so incompatible changes may
-;; be made in the future.  However, it's stable and usable now.  Feedback is appreciated.
-
-;;;; Installation
-
-;; Install the required packages (see the "Package-Requires" line in the headers at the top).
-;; org-ql and org-ql-agenda may be found at <http://github.com/alphapapa/org-ql>.  Then put
-;; this file in your `load-path'.
+;; The default view includes a chronological list of scheduled and
+;; deadlined tasks in the current buffer (similar to the Org agenda
+;; ,but without all its features) at the top, and a list of all other
+;; non-done to-do items below.  If the buffer is narrowed, the sidebar
+;; only shows items in the narrowed portion; this allows seeing an
+;; overview of tasks in a subtree.
 
 ;;;; Usage
 
-;; Eval (require 'org-sidebar).  Then, in an Org buffer, run the command `org-sidebar'.
+;; Run command `org-sidebar' to display the default sidebars for the
+;; current Org buffer.  Customization options are in the `org-sidebar'
+;; group.
 
-;; Customization options are in the `org-sidebar' group.
+;; To display your own sidebars, call the function `org-sidebar' with
+;; the arguments described in its docstring.  Also see the functions
+;; `org-sidebar--upcoming-items' and `org-sidebar--todo-items' for
+;; examples.
 
 ;;; License:
 

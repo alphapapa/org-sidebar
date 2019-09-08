@@ -2,23 +2,20 @@
 
 * org-sidebar
 
-This package presents a helpful sidebar view for Org buffers.  At the top is a chronological list of scheduled and deadlined tasks in the current buffer (similar to the Org agenda ,but without all its features), and below that is a list of all other non-done to-do items.  If the buffer is narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of tasks in a subtree.
+This package presents a helpful sidebar view for Org buffers.  Sidebars are customizable using [[https://github.com/alphapapa/org-ql][org-ql]] queries and [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] grouping.
 
-Please note: this package is in an early stage of development, so incompatible changes may be made in the future.  However, it's stable and usable now.  Feedback is appreciated.
+The default view includes a chronological list of scheduled and deadlined tasks in the current buffer (similar to the Org agenda ,but without all its features) at the top, and a list of all other non-done to-do items below.  If the buffer is narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of tasks in a subtree.
+
+[[images/screenshot.png]]
 
 ** Contents
 :PROPERTIES:
 :TOC:      siblings
 :END:
-    -  [[#screenshots][Screenshots]]
     -  [[#installation][Installation]]
     -  [[#usage][Usage]]
     -  [[#changelog][Changelog]]
     -  [[#notes][Notes]]
-
-** Screenshots
-
-[[images/screenshot.png]]
 
 ** Installation
 
@@ -39,7 +36,9 @@ You may find [[https://github.com/alphapapa/unpackaged.el#upgrade-a-quelpa-use-p
 :TOC:      0
 :END:
 
-Call the commands below.  Customization options are in the =org-sidebar= group.
+Run command =org-sidebar= to display the default sidebars for the current Org buffer.  Customization options are in the =org-sidebar= group.
+
+To display your own sidebars, call the function =org-sidebar= with the arguments described in its docstring.  Also see the functions =org-sidebar--upcoming-items= and =org-sidebar--todo-items= for examples.
 
 *** Key bindings
 
@@ -86,8 +85,7 @@ For examples of defining custom sidebar commands, please see [[examples.org]].
 
 *** 0.2-pre
 
-*Internal*
-+  Function ~org-sidebar~ now takes several kinds of arguments.
+Extensive refactoring and improvements.
 
 *** 0.1
 
