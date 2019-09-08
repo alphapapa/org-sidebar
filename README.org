@@ -22,21 +22,24 @@ Please note: this package is in an early stage of development, so incompatible c
 
 ** Installation
 
-Install these packages (e.g. from MELPA):
+Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
 
-+  =dash=
-+  =s= 
+1.  Install [[https://framagit.org/steckerhalter/quelpa-use-package#installation][quelpa-use-package]] (which can be installed directly from MELPA).
+2.  Add this form to your init file:
 
-=org-ql= and =org-ql-agenda= are also required; they are not on MELPA, but may be found at [[http://github.com/alphapapa/org-ql]].  Put them and this file in your =load-path=.
+#+BEGIN_SRC elisp
+  (use-package org-sidebar
+    :quelpa (org-sidebar :fetcher github :repo "alphapapa/org-sidebar"))
+#+END_SRC
+
+You may find [[https://github.com/alphapapa/unpackaged.el#upgrade-a-quelpa-use-package-forms-package][this function]] helpful for updating packages with Quelpa.
 
 ** Usage
 :PROPERTIES:
 :TOC:      0
 :END:
 
-Load the package with =(require 'org-sidebar)= (or use ~use-package~).  Then call the commands below.
-
-Customization options are in the =org-sidebar= group.
+Call the commands below.  Customization options are in the =org-sidebar= group.
 
 *** Key bindings
 
