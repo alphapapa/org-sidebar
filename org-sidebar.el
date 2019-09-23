@@ -57,10 +57,9 @@
 (require 'dash-functional)
 (require 's)
 
-(require 'org-super-agenda)
-
 (require 'org-ql)
-(require 'org-ql-agenda)
+(require 'org-ql-view)
+(require 'org-super-agenda)
 
 ;;;; Variables
 
@@ -113,10 +112,10 @@
 See `format-time-string'."
   :type 'string)
 
-(defcustom org-sidebar-format-fn #'org-ql-agenda--format-element
+(defcustom org-sidebar-format-fn #'org-ql-view--format-element
   "Function used to format elements.
 Takes a single argument: the Org element being formatted.
-Generally, `org-ql-agenda--format-element' should be used; if
+Generally, `org-ql-view--format-element' should be used; if
 not, the function used should set appropriate text properties,
 imitating the Org Agenda, for commands and features which use the
 text properties to act on items."
