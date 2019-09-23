@@ -1,6 +1,9 @@
 
+#+TITLE: org-sidebar
 
-* org-sidebar
+[[https://melpa.org/#/org-sidebar][file:https://melpa.org/packages/org-sidebar-badge.svg]]
+
+# [[https://stable.melpa.org/#/org-sidebar][file:https://stable.melpa.org/packages/org-sidebar-badge.svg]]
 
 This package presents a helpful sidebar view for Org buffers.  Sidebars are customizable using [[https://github.com/alphapapa/org-ql][org-ql]] queries and [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] grouping.
 
@@ -8,16 +11,25 @@ The default view includes a chronological list of scheduled and deadlined tasks 
 
 [[images/screenshot.png]]
 
-** Contents
+* Contents
 :PROPERTIES:
-:TOC:      siblings
+:TOC:      this
 :END:
-    -  [[#installation][Installation]]
-    -  [[#usage][Usage]]
-    -  [[#changelog][Changelog]]
-    -  [[#notes][Notes]]
+  -  [[#installation][Installation]]
+  -  [[#usage][Usage]]
+  -  [[#changelog][Changelog]]
+  -  [[#notes][Notes]]
 
-** Installation
+* Installation
+:PROPERTIES:
+:TOC:      0
+:END:
+
+** MELPA
+
+If you installed from MELPA, you're done!
+
+** Quelpa
 
 Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
 
@@ -31,7 +43,7 @@ Installing with [[https://framagit.org/steckerhalter/quelpa][Quelpa]] is easy:
 
 You may find [[https://github.com/alphapapa/unpackaged.el#upgrade-a-quelpa-use-package-forms-package][this function]] helpful for updating packages with Quelpa.
 
-** Usage
+* Usage
 :PROPERTIES:
 :TOC:      0
 :END:
@@ -40,7 +52,7 @@ Run command =org-sidebar= to display the default sidebars for the current Org bu
 
 To display your own sidebars, call the function =org-sidebar= with the arguments described in its docstring.  Also see the functions =org-sidebar--upcoming-items= and =org-sidebar--todo-items= for examples.
 
-*** Key bindings
+** Key bindings
 
 In a sidebar buffer, these keys are bound:
 
@@ -48,7 +60,7 @@ In a sidebar buffer, these keys are bound:
 +  =g= :: Update the sidebar.
 +  =q= :: Hide the sidebar.
 
-*** Commands
+** Commands
 
 +  ~org-sidebar~ :: ~(&key BUFFERS FNS STRUCTS GROUP SUPER-GROUPS)~ Display the Org Sidebar.
    
@@ -74,35 +86,35 @@ In a sidebar buffer, these keys are bound:
    ~SORT~: One or a list of ~org-ql~ sorting functions, like ~date~ or ~priority~.
 +  ~org-sidebar-update~ :: Update current sidebar buffer.
 
-*** Custom commands
+** Custom commands
 
 For examples of defining custom sidebar commands, please see [[examples.org]].
 
-** Changelog
+* Changelog
 :PROPERTIES:
 :TOC:      0
 :END:
 
-*** 0.2-pre
+** 0.2-pre
 
 Extensive refactoring and improvements.
 
-*** 0.1
+** 0.1
 
 First tagged version.
 
-** Notes
+* Notes
 
 This was inspired by [[https://www.reddit.com/r/emacs/comments/88mtrh/emacs_org_mode_with_atom_org_mode_design/][this /r/Emacs post]], which was inspired by [[https://github.com/MattFlower/organized/][Organized for Atom]].
 
-** License
+* License
 :PROPERTIES:
 :TOC:      ignore
 :END:
 
 GPLv3.
 
-** COMMENT Config
+* COMMENT Config
 :PROPERTIES:
 :TOC:      ignore
 :END:
