@@ -5,11 +5,15 @@
 
 # [[https://stable.melpa.org/#/org-sidebar][file:https://stable.melpa.org/packages/org-sidebar-badge.svg]]
 
-This package presents a helpful sidebar view for Org buffers.  Sidebars are customizable using [[https://github.com/alphapapa/org-ql][org-ql]] queries and [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] grouping.
+This package presents helpful sidebars for Org buffers.  Sidebars are customizable using [[https://github.com/alphapapa/org-ql][org-ql]] queries and [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] grouping.
 
-The default view includes a chronological list of scheduled and deadlined tasks in the current buffer (similar to the Org agenda ,but without all its features) at the top, and a list of all other non-done to-do items below.  If the buffer is narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of tasks in a subtree.
+The default sidebar includes a chronological list of scheduled and deadlined items in the current buffer (similar to the Org agenda ,but without all its features) at the top, and a list of all other non-done to-do items below.  If the buffer is narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of tasks in a subtree.
 
 [[images/screenshot.png]]
+
+The tree-view sidebar aids navigating an outline and editing entries individually:
+
+[[images/tree.gif]]
 
 * Contents
 :PROPERTIES:
@@ -48,47 +52,63 @@ You may find [[https://github.com/alphapapa/unpackaged.el#upgrade-a-quelpa-use-p
 :TOC:      0
 :END:
 
-Run command =org-sidebar= to display the default sidebars for the current Org buffer.  Customization options are in the =org-sidebar= group.
+*Commands:*
++  =org-sidebar-tree=: Display tree-view sidebar for current Org buffer.
++  =org-sidebar=: Display the default item sidebars for the current Org buffer.
 
-To display your own sidebars, call the function =org-sidebar= with the arguments described in its docstring.  Also see the functions =org-sidebar--upcoming-items= and =org-sidebar--todo-items= for examples.
+*Customization:*  Customization options are in the =org-sidebar= group.
 
-** Key bindings
+*Advanced:*  To display custom-defined sidebars, call the function =org-sidebar= with the arguments described in its docstring.  See examples in [[examples.org]], as well as the definitions of functions =org-sidebar--todo-items= and =org-sidebar--upcoming-items=.
 
-In a sidebar buffer, these keys are bound:
+** =org-sidebar-tree= command
 
-+  =RET=, =mouse-1= :: Jump to an item in its buffer.
-+  =g= :: Update the sidebar.
-+  =q= :: Hide the sidebar.
+[[images/tree.gif]]
 
-** Commands
+/Demo recorded using packages =org-sticky-header=, =org-bullets=, and theme =doom-city-lights=./
 
-+  ~org-sidebar~ :: ~(&key BUFFERS FNS STRUCTS GROUP SUPER-GROUPS)~ Display the Org Sidebar.
-   
-   Interactively, display the sidebars configured in ~org-sidebar-default-fns~.
-   
-   ~BUFFERS~ may be one or a list of buffers to display in the sidebar.
-   
-   ~FNS~ may be one or a list of functions, each of which may return a buffer or a ~org-sidebar~ struct.
+In the tree buffer, the keymap =org-sidebar-tree-map= is used, which is based on =org-mode-map= (so you can use Org keybindings to manipulate nodes), and has these additional bindings by default:
 
-   ~SIDEBARS~ may be one or a list of ~org-sidebar~ structs.
-   
-   When ~GROUP~ is non-nil (interactively, with one universal prefix argument), and when ~SUPER-GROUPS~ is nil, call each function with the ~group~ keyword argument non-nil.
-   
-   ~SUPER-GROUPS~ may be a list of groups according to ~org-super-agenda-groups~, in which case the items in the buffers will be grouped accordingly (where applicable).  Interactively, with two universal prefix arguments, the global value of ~org-super-agenda-groups~ is used.
-+  ~org-sidebar-ql~ :: ~(&key QUERY BUFFERS-FILES NARROW GROUP-PROPERTY SORT)~ Display a sidebar for ~org-ql~ ~QUERY~.  Interactively, with prefix, prompt for these variables:
-   
-   ~BUFFERS-FILES~: ~A~ list of buffers and/or files to search.
-   
-   ~NARROW~: When non-nil, don’t widen buffers before searching.
-   
-   ~GROUP-PROPERTY~: One of the following symbols: ~category~, ~parent~, ~priority~, ~todo~.
-   
-   ~SORT~: One or a list of ~org-ql~ sorting functions, like ~date~ or ~priority~.
-+  ~org-sidebar-update~ :: Update current sidebar buffer.
++  =<tab>=: Toggle visibility of child nodes.
++  =<mouse-2>=: Toggle visibility of child nodes.
++  =<mouse-1>=: Jump to heading using default jump function.
++  =<return>=: Jump to heading using default jump function (adding universal prefix arguments to display more subtree content, corresponding with the click-and-drag mouse events below).
 
-** Custom commands
+Dragging-and-releasing with mouse buttons (as opposed to clicking and releasing at a single position) show additional subtree and entry content:
 
-For examples of defining custom sidebar commands, please see [[examples.org]].
++  =<drag-mouse-1>=: Jump to heading using default jump function, and also show child headings.
++  =<drag-mouse-2>=: Jump to heading using default jump function, and also show all descendant headings.
++  =<drag-mouse-3>=: Jump to heading using default jump function, and also show all descendant headings and their entry text.
+
+If you prefer, you may customize =org-sidebar-tree-jump-fn= to jump to entries in their source buffer rather than indirect buffers.
+
+** Item sidebar commands
+
+These commands display item sidebars, which display Org entries gathered with =org-ql=.
+
+*Key bindings*: In an item sidebar buffer, these keys are bound:
+
++  =RET=, =mouse-1=: Jump to an item in its buffer.
++  =g=: Update the sidebar.
++  =q=: Hide the sidebar.
+
+*** org-sidebar ~(&key buffers fns structs group super-groups)~
+
+Interactively, display the sidebars configured in ~org-sidebar-default-fns~.
+
++  ~BUFFERS~ may be one or a list of buffers to display in the sidebar.
++  ~FNS~ may be one or a list of functions, each of which may return a buffer or a ~org-sidebar~ struct.
++  ~SIDEBARS~ may be one or a list of ~org-sidebar~ structs.
++  When ~GROUP~ is non-nil (interactively, with one universal prefix argument), and when ~SUPER-GROUPS~ is nil, call each function with the ~group~ keyword argument non-nil.
++  ~SUPER-GROUPS~ may be a list of groups according to ~org-super-agenda-groups~, in which case the items in the buffers will be grouped accordingly (where applicable).  Interactively, with two universal prefix arguments, the global value of ~org-super-agenda-groups~ is used.
+
+*** org-sidebar-ql ~(&key query buffers-files narrow group-property sort)~
+
+Display a sidebar for ~org-ql~ ~QUERY~.  Interactively, with prefix, prompt for these variables:
+
++  ~BUFFERS-FILES~: ~A~ list of buffers and/or files to search.
++  ~NARROW~: When non-nil, don’t widen buffers before searching.
++  ~GROUP-PROPERTY~: One of the following symbols: ~category~, ~parent~, ~priority~, ~todo~.
++  ~SORT~: One or a list of ~org-ql~ sorting functions, like ~date~ or ~priority~.
 
 * Changelog
 :PROPERTIES:
@@ -98,6 +118,9 @@ For examples of defining custom sidebar commands, please see [[examples.org]].
 ** 0.2-pre
 
 Extensive refactoring and improvements.
+
+*Added*
++  Tree-view sidebar, helpful for navigating large outline trees.  See [[#org-sidebar-tree][documentation]].
 
 ** 0.1
 

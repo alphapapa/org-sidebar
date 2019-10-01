@@ -322,6 +322,32 @@ This looks like it might be useful too:
      with C-u. For example, [C-u C-x b] calls
      `switch-buffer-without-purpose'.
 #+END_EXAMPLE
+
+* Notes
+
+** [2019-10-01 Tue 04:50:38] org-sidebar-tree demo
+:PROPERTIES:
+:ID:       47905d63-4bc1-4ca7-90a0-4a2780ed65cb
+:END:
+
+Setup:
+1.  With indirect buffer opened to test data heading
+2.  Set org-sticky-header-full-path to 'reversed
+3.  Remove blank lines between entries to avoid them appearing in the tree buffer when headings are moved.
+4.  Collapse drawers in source buffer.
+
+Demo:
+1.  M-x org-sidebar-tree
+2.  Toggle some headings with mouse-2.
+3.  Jump to some headings in indirect buffer with mouse-1.
+4.  Jump to headings with children by dragging mouse-1.
+5.  Change to-do keywords with S-<left>/<right>
+6.  Change priority with S-<up>/<down>
+7.  Move headings around with M-<up>/<down>
+      1)  (*do not move headings up past their original location, may cause visual bug*)
+      2)  Do not move headings with expanded children, as it causes the entry content to be displayed in the tree buffer.
+
+
 * Code
 
 ** Testing

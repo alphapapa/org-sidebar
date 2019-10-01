@@ -130,6 +130,7 @@ text properties to act on items."
   "Default sidebar functions."
   :type '(choice (const :tag "Upcoming items" org-sidebar--upcoming-items)
                  (const :tag "To-do items" org-sidebar--todo-items)
+                 (const :tag "Tree-view" org-sidebar-tree-buffer)
                  (function :tag "Other function")))
 
 ;;;; Structs
@@ -382,7 +383,7 @@ The `org-ql' query is:
                        :action 'element-with-markers
                        :narrow t :sort 'date)))
     (make-org-sidebar
-     :name (concat "Upcoming items in " (buffer-name))
+     :name (concat "Upcoming items: " (buffer-name))
      :description "Non-done items with a deadline or scheduled date in the current buffer"
      ;; NOTE: This commented code produces date headers that are more visually pleasing
      ;; to me, but since moving the functionality into `org-super-agenda', it probably
@@ -407,10 +408,268 @@ If no items are found, return nil."
                        :narrow t
                        :action 'element-with-markers)))
     (make-org-sidebar
-     :name (concat "To-do items in " (buffer-name))
+     :name (concat "To-do items: " (buffer-name))
      :description "Unscheduled, un-deadlined to-do items in current buffer."
      :items items
      :super-groups '((:auto-todo)))))
+
+;;;; Tree-view
+
+(defvar org-sidebar-tree-map
+  (let ((map (make-sparse-keymap))
+        (mappings '(
+                    "<return>" org-sidebar-tree-jump
+                    "<mouse-1>" org-sidebar-tree-jump-mouse
+                    "<double-mouse-1>" org-sidebar-tree-jump-mouse
+                    "<triple-mouse-1>" org-sidebar-tree-jump-mouse
+                    "<mouse-2>" org-sidebar-tree-toggle-children-mouse
+                    "<double-mouse-2>" org-sidebar-tree-toggle-children-mouse
+                    "<triple-mouse-2>" org-sidebar-tree-toggle-children-mouse
+                    "<drag-mouse-1>" org-sidebar-tree-jump-children-mouse
+                    "<drag-mouse-2>" org-sidebar-tree-jump-branches-mouse
+                    "<drag-mouse-3>" org-sidebar-tree-jump-entries-mouse
+                    "<tab>" org-sidebar-tree-toggle-children
+                    )))
+    (set-keymap-parent map org-mode-map)
+    (cl-loop for (key fn) on mappings by #'cddr
+             do (define-key map (kbd key) fn))
+    map)
+  "Keymap for `org-sidebar-tree' buffers.")
+
+(defcustom org-sidebar-tree-jump-fn #'org-sidebar-tree-jump-indirect
+  "Default function used to jump to entries from tree-view buffer."
+  :type '(choice (const :tag "Indirect buffer" org-sidebar-tree-jump-indirect)
+                 (const :tag "Source buffer" org-sidebar-tree-jump-source)
+                 (function :tag "Custom function")))
+
+(defun org-sidebar-tree ()
+  "Show tree-view sidebar."
+  ;; TODO: I accidentally discovered that this almost works perfectly in Elisp
+  ;; buffers because of the outline regexps.  It wouldn't take much to make it
+  ;; work in a similar way, clicking on a function to edit it in a buffer.
+  (interactive)
+  (org-sidebar--display-buffers (list (org-sidebar-tree-buffer))))
+
+(defun org-sidebar-tree-toggle-or-jump (&optional children)
+  "Toggle visibility of current node, or jump to it in indirect buffer.
+If point is on heading stars, toggle visibility, otherwise jump
+to current heading in an indirect buffer.  If CHILDREN is
+non-nil (interactively, with prefix), also show child headings in
+the indirect buffer."
+  (interactive "P")
+  (unless (buffer-base-buffer)
+    (error "Must be in a tree buffer"))
+  (if (or (eq ?* (char-after))
+          (eq ?* (char-before)))
+      ;; Point is on heading stars: toggle visibility.
+      (org-sidebar-tree-toggle-children)
+    ;; Point on heading text: jump.
+    (org-sidebar-tree-jump children)))
+
+(defun org-sidebar-tree-jump (&optional children)
+  "Jump to heading at point using `org-sidebar-tree-jump-fn'.
+Argument CHILDREN controls how child entries are displayed:
+
+If nil (interactively, without prefix), only show the entry's own
+body text.  If `children' (with one universal prefix), also show
+child headings.  If `branches' (two prefixes), show all
+descendant headings.  If `entries' (three prefixes), show all
+descendants and their body text."
+  (interactive "p")
+  (unless (buffer-base-buffer)
+    (error "Must be in a tree buffer"))
+  (funcall org-sidebar-tree-jump-fn
+           :children (pcase children
+                       (1 nil)
+                       (4 'children)
+                       (16 'branches)
+                       (64 'entries))))
+
+(cl-defun org-sidebar-tree-jump-indirect (&key children)
+  "Jump to an indirect buffer showing the heading at point.
+If CHILDREN is non-nil (interactively, with prefix), also show
+child headings in the indirect buffer.  Should be called from a
+tree-view buffer."
+  (interactive "P")
+  (unless (buffer-base-buffer)
+    (error "Must be in a tree buffer"))
+  (let* ((new-buffer (org-sidebar--subtree-buffer children))
+         (base-buffer (buffer-base-buffer))
+         (indirect-buffers
+          ;; Collect list of indirect buffers for the tree buffer's
+          ;; base buffer, not including the tree buffer.
+          (cl-loop for buffer in (buffer-list)
+                   when (and (eq (buffer-base-buffer buffer) base-buffer)
+                             (not (eq buffer (current-buffer))))
+                   collect buffer into buffers
+                   finally return (-uniq buffers)))
+         (displayed-buffer (--first (get-buffer-window it) indirect-buffers))
+         (window (when displayed-buffer
+                   (get-buffer-window displayed-buffer))))
+    (if window
+        (progn
+          (select-window window)
+          (switch-to-buffer new-buffer))
+      (pop-to-buffer new-buffer
+                     (cons 'display-buffer-use-some-window
+                           (list (cons 'inhibit-same-window t)))))))
+
+(cl-defun org-sidebar-tree-jump-source (&key children)
+  "Jump to the heading at point in its source buffer.
+If CHILDREN is non-nil (interactively, with prefix), also expand
+child entries.  Should be called from a tree-view buffer."
+  (interactive "P")
+  (unless (buffer-base-buffer)
+    (error "Must be in a tree buffer"))
+  (let* ((pos (point))
+         (base-buffer (buffer-base-buffer))
+         (window (get-buffer-window base-buffer)))
+    (if window
+        (progn
+          (select-window window)
+          (switch-to-buffer base-buffer))
+      (pop-to-buffer base-buffer
+                     (cons 'display-buffer-use-some-window
+                           (list (cons 'inhibit-same-window t)))))
+    (goto-char pos)
+    (org-show-entry)
+    (org-show-children)
+    (when children
+      (org-show-subtree))))
+
+(defun org-sidebar-tree-toggle-children ()
+  "Toggle visibility of child headings at point.
+Like `outline-toggle-children', but doesn't show entry bodies."
+  (interactive)
+  ;; There seems to be no existing function to do simply this, to
+  ;; toggle the visibility of child headings without also showing the
+  ;; entry bodies, so we have to write our own.  This is a copy of
+  ;; `outline-toggle-children', except that it doesn't call
+  ;; `outline-show-entry'.
+  (save-excursion
+    (outline-back-to-heading)
+    (if (save-excursion
+          (outline-next-heading)
+          (not (outline-invisible-p)))
+        (outline-hide-subtree)
+      (outline-show-children))))
+
+(defun org-sidebar-tree-toggle-children-mouse (event)
+  "Toggle visibility of child headings at EVENT.
+Like `outline-toggle-children', but doesn't show entry bodies."
+  (interactive "e")
+  (-let* (((_type position _count) event)
+          ((window _pos-or-area (_x . _y) _timestamp
+                   _object text-pos . _) position))
+    (with-selected-window window
+      (goto-char text-pos)
+      (org-sidebar-tree-toggle-children))))
+
+(cl-defun org-sidebar-tree-jump-mouse (event &key children)
+  "Jump to tree for EVENT.
+If CHILDREN is non-nil, also show children."
+  (interactive "e")
+  (-let* (((_type position _count) event)
+          ((window _pos-or-area (_x . _y) _timestamp
+                   _object text-pos . _) position))
+    (with-selected-window window
+      (goto-char text-pos)
+      (goto-char (point-at-bol))
+      (funcall org-sidebar-tree-jump-fn :children children))))
+
+(defun org-sidebar-tree-jump-branches-mouse (event)
+  "Jump to tree for EVENT, showing branches."
+  (interactive "e")
+  (org-sidebar-tree-jump-mouse event :children 'branches))
+
+(defun org-sidebar-tree-jump-children-mouse (event)
+  "Jump to tree for EVENT, showing children."
+  (interactive "e")
+  (org-sidebar-tree-jump-mouse event :children 'children))
+
+(defun org-sidebar-tree-jump-entries-mouse (event)
+  "Jump to tree for EVENT, showing entries."
+  (interactive "e")
+  (org-sidebar-tree-jump-mouse event :children 'entries))
+
+(cl-defun org-sidebar-tree-buffer (&key (buffer (current-buffer)) &allow-other-keys)
+  "Return a tree-view buffer for BUFFER."
+  (-let* ((buffer-name (concat "<tree>" (buffer-name buffer)))
+          ((min max) (with-current-buffer buffer
+                       (list (point-min) (point-max))))
+          (existing-buffer (get-buffer buffer-name))
+          tree-buffer)
+    (when existing-buffer
+      ;; Buffer with name already exists.
+      (if (buffer-base-buffer existing-buffer)
+          ;; Buffer is indirect: kill it so we can remake it.
+          (kill-buffer existing-buffer)
+        ;; Buffer is not indirect: something is probably wrong, so warn.
+        (warn "Existing tree buffer that is not indirect: %s" existing-buffer)))
+    (setf tree-buffer (clone-indirect-buffer buffer-name nil 'norecord))
+    (with-current-buffer tree-buffer
+      (use-local-map org-sidebar-tree-map)
+      (setf mode-line-format nil
+            header-line-format (concat "Tree: " (buffer-name buffer)))
+      (toggle-truncate-lines 1)
+      (narrow-to-region min max)
+      (save-excursion
+        (goto-char (point-min))
+        (unless (org-before-first-heading-p)
+          ;; Tree view only shows one subtree: expand its branches.
+          (outline-show-branches)))
+      (save-excursion
+        ;; Hide visible entry bodies.
+        (goto-char (point-min))
+        (when (org-before-first-heading-p)
+          (outline-next-visible-heading 1))
+        (cl-loop do (outline-hide-body)
+                 while (outline-next-visible-heading 1)))
+      (outline-back-to-heading))
+    tree-buffer))
+
+(defun org-sidebar--subtree-buffer (&optional children)
+  "Return indirect buffer for subtree at point.
+If CHILDREN is `children', also show its child headings in the
+indirect buffer.  If `branches', show all descendant headings.  If
+`entries', show all descendant headings and entry text."
+  ;; Unfortunately, `org-tree-to-indirect-buffer' doesn't really do
+  ;; what we need in a reusable way, so we have to reimplement it.
+  (org-with-wide-buffer
+   ;; TODO: Use `org-get-heading' after upgrading to newer Org.
+   (let* ((buffer-name (concat (nth 4 (org-heading-components)) "::" (file-name-nondirectory (buffer-file-name (buffer-base-buffer)))))
+          (old-buffer (get-buffer buffer-name))
+          (_killed-old-buffer-p (when old-buffer
+                                  (if (buffer-base-buffer old-buffer)
+                                      ;; Existing buffer is indirect: kill it.
+                                      (kill-buffer old-buffer)
+                                    ;; Existing buffer is not indirect: error.
+                                    (error "Existing, non-indirect buffer named: %s" buffer-name))))
+          (new-buffer (clone-indirect-buffer buffer-name nil t))
+          (pos (point))
+          (beg (org-entry-beginning-position))
+          (end (if children
+                   (save-excursion
+                     (org-end-of-subtree)
+                     (point))
+                 (org-entry-end-position))))
+     (with-current-buffer new-buffer
+       (goto-char pos)
+       (org-show-entry)
+       (pcase-exhaustive children
+         ('branches (outline-show-branches))
+         ('children (org-show-children))
+         ('entries (org-sidebar-show-subtree-entries))
+         ('nil nil))
+       (narrow-to-region beg end)
+       (current-buffer)))))
+
+(defun org-sidebar-show-subtree-entries ()
+  "Like `org-show-subtree', but only expands entry text.
+Unlike `org-show-subtree', does not expand drawers."
+  (save-excursion
+    (cl-loop do (org-show-entry)
+             while (outline-next-heading))))
 
 ;;;; Footer
 
