@@ -13,7 +13,7 @@ The default sidebar includes a chronological list of scheduled and deadlined ite
 
 The tree-view sidebar aids navigating an outline and editing entries individually:
 
-[[images/tree.gif]]
+[[images/tree2.gif]]
 
 * Contents
 :PROPERTIES:
