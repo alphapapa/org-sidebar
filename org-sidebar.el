@@ -425,9 +425,8 @@ If no items are found, return nil."
                     "<mouse-2>" org-sidebar-tree-toggle-children-mouse
                     "<double-mouse-2>" org-sidebar-tree-toggle-children-mouse
                     "<triple-mouse-2>" org-sidebar-tree-toggle-children-mouse
-                    "<drag-mouse-1>" org-sidebar-tree-jump-children-mouse
-                    "<drag-mouse-2>" org-sidebar-tree-jump-branches-mouse
-                    "<drag-mouse-3>" org-sidebar-tree-jump-entries-mouse
+                    "<drag-mouse-1>" org-sidebar-tree-jump-branches-mouse
+                    "<drag-mouse-2>" org-sidebar-tree-jump-entries-mouse
                     "<tab>" org-sidebar-tree-toggle-children
                     )))
     (set-keymap-parent map org-mode-map)
@@ -588,11 +587,6 @@ If CHILDREN is non-nil, also show children."
   (interactive "e")
   (org-sidebar-tree-jump-mouse event :children 'branches))
 
-(defun org-sidebar-tree-jump-children-mouse (event)
-  "Jump to tree for EVENT, showing children."
-  (interactive "e")
-  (org-sidebar-tree-jump-mouse event :children 'children))
-
 (defun org-sidebar-tree-jump-entries-mouse (event)
   "Jump to tree for EVENT, showing entries."
   (interactive "e")
@@ -631,7 +625,8 @@ If CHILDREN is non-nil, also show children."
           (outline-next-visible-heading 1))
         (cl-loop do (outline-hide-body)
                  while (outline-next-visible-heading 1)))
-      (outline-back-to-heading))
+      (unless (org-before-first-heading-p)
+        (outline-back-to-heading)))
     tree-buffer))
 
 (defun org-sidebar--subtree-buffer (&optional children)
@@ -652,6 +647,11 @@ indirect buffer.  If `branches', show all descendant headings.  If
                                     ;; Existing buffer is not indirect: error.
                                     (error "Existing, non-indirect buffer named: %s" buffer-name))))
           (new-buffer (clone-indirect-buffer buffer-name nil t))
+          (children (if children
+                        children
+                      ;; If `children' is nil, we set it to whether the entry has children.
+                      ;; This is either an elegant hack or an ugly dual-purpose variable.
+                      (org-sidebar--children-p)))
           (pos (point))
           (beg (org-entry-beginning-position))
           (end (if children
@@ -666,9 +666,20 @@ indirect buffer.  If `branches', show all descendant headings.  If
          ('branches (outline-show-branches))
          ('children (org-show-children))
          ('entries (org-sidebar-show-subtree-entries))
-         ('nil nil))
+         ('nil nil)
+         (_ (org-show-children)))
        (narrow-to-region beg end)
        (current-buffer)))))
+
+(defun org-sidebar--children-p ()
+  "Return non-nil if entry at point has child headings."
+  (org-with-wide-buffer
+   (org-back-to-heading t)
+   (let ((end (save-excursion
+                ;; Returns point.
+                (org-end-of-subtree t))))
+     (goto-char (point-at-eol))
+     (re-search-forward "^\*+ " end t))))
 
 (defun org-sidebar-show-subtree-entries ()
   "Like `org-show-subtree', but only expands entry text.
