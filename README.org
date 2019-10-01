@@ -87,7 +87,7 @@ In the tree buffer, the keymap =org-sidebar-tree-map= is used, which is based on
 
 +  =<tab>=: Toggle visibility of child nodes.
 +  =<mouse-2>=: Toggle visibility of child nodes.
-+  =<mouse-1>=: Jump to heading using default jump function.
++  =<mouse-1>=: Jump to heading using default jump function; or, if heading stars are clicked, toggle visibility of child nodes.
 +  =<return>=: Jump to heading using default jump function (adding universal prefix arguments to display more subtree content, corresponding with the click-and-drag mouse events below).
 
 Dragging-and-releasing with mouse buttons (as opposed to clicking and releasing at a single position) show additional subtree and entry content:
