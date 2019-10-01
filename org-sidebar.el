@@ -442,13 +442,19 @@ If no items are found, return nil."
                  (const :tag "Source buffer" org-sidebar-tree-jump-source)
                  (function :tag "Custom function")))
 
+(defcustom org-sidebar-tree-side 'right
+  "Which side to show the tree sidebar on."
+  :type '(choice (const :tag "Left" left)
+                 (const :tag "Right" right)))
+
 (defun org-sidebar-tree ()
   "Show tree-view sidebar."
   ;; TODO: I accidentally discovered that this almost works perfectly in Elisp
   ;; buffers because of the outline regexps.  It wouldn't take much to make it
   ;; work in a similar way, clicking on a function to edit it in a buffer.
   (interactive)
-  (org-sidebar--display-buffers (list (org-sidebar-tree-buffer))))
+  (let ((org-sidebar-side org-sidebar-tree-side))
+    (org-sidebar--display-buffers (list (org-sidebar-tree-buffer)))))
 
 (defun org-sidebar-tree-toggle-or-jump (&optional children)
   "Toggle visibility of current node, or jump to it in indirect buffer.

@@ -62,6 +62,12 @@ You may find [[https://github.com/alphapapa/unpackaged.el#upgrade-a-quelpa-use-p
 
 /Showing theme doom-one-light./
 
+Or you can display the tree sidebar on one side, and the item sidebars on the other:
+
+[[images/tree-and-item-sidebars.png]]
+
+/Showing theme doom-opera-light./
+
 *Advanced:*  To display custom-defined sidebars, call the function =org-sidebar= with the arguments described in its docstring.  See examples in [[examples.org]], as well as the definitions of functions =org-sidebar--todo-items= and =org-sidebar--upcoming-items=.
 
 ** =org-sidebar-tree= command
