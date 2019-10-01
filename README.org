@@ -52,11 +52,14 @@ You may find [[https://github.com/alphapapa/unpackaged.el#upgrade-a-quelpa-use-p
 :TOC:      0
 :END:
 
-*Commands:*
+Call these commands to display sidebars:
+
 +  =org-sidebar-tree=: Display tree-view sidebar for current Org buffer.
 +  =org-sidebar=: Display the default item sidebars for the current Org buffer.
 
-*Customization:*  Customization options are in the =org-sidebar= group.  For example, you can add the tree view to the default sidebar:
+** Customization
+
+Customization options are in the =org-sidebar= group.  For example, you can add the tree view to the default sidebar:
 
 [[images/sidebar-with-tree.png]]
 
@@ -68,9 +71,13 @@ Or you can display the tree sidebar on one side, and the item sidebars on the ot
 
 /Showing theme doom-opera-light./
 
-*Advanced:*  To display custom-defined sidebars, call the function =org-sidebar= with the arguments described in its docstring.  See examples in [[examples.org]], as well as the definitions of functions =org-sidebar--todo-items= and =org-sidebar--upcoming-items=.
+** Advanced
 
-** =org-sidebar-tree= command
+To display custom-defined sidebars, call the function =org-sidebar= with the arguments described in its docstring.  See examples in [[examples.org]], as well as the definitions of functions =org-sidebar--todo-items= and =org-sidebar--upcoming-items=.
+
+** Commands
+
+*** =org-sidebar-tree=
 
 [[images/tree.gif]]
 
@@ -91,7 +98,7 @@ Dragging-and-releasing with mouse buttons (as opposed to clicking and releasing 
 
 If you prefer, you may customize =org-sidebar-tree-jump-fn= to jump to entries in their source buffer rather than indirect buffers.
 
-** Item sidebar commands
+*** Item sidebars
 
 These commands display item sidebars, which display Org entries gathered with =org-ql=.
 
