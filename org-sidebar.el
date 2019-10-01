@@ -612,12 +612,12 @@ If CHILDREN is non-nil, also show children."
       (setf mode-line-format nil
             header-line-format (concat "Tree: " (buffer-name buffer)))
       (toggle-truncate-lines 1)
-      (narrow-to-region min max)
       (save-excursion
-        (goto-char (point-min))
+        (goto-char min)
         (unless (org-before-first-heading-p)
           ;; Tree view only shows one subtree: expand its branches.
           (outline-show-branches)))
+      (narrow-to-region min max)
       (save-excursion
         ;; Hide visible entry bodies.
         (goto-char (point-min))
