@@ -56,7 +56,11 @@ You may find [[https://github.com/alphapapa/unpackaged.el#upgrade-a-quelpa-use-p
 +  =org-sidebar-tree=: Display tree-view sidebar for current Org buffer.
 +  =org-sidebar=: Display the default item sidebars for the current Org buffer.
 
-*Customization:*  Customization options are in the =org-sidebar= group.
+*Customization:*  Customization options are in the =org-sidebar= group.  For example, you can add the tree view to the default sidebar:
+
+[[images/sidebar-with-tree.png]]
+
+/Showing theme doom-one-light./
 
 *Advanced:*  To display custom-defined sidebars, call the function =org-sidebar= with the arguments described in its docstring.  See examples in [[examples.org]], as well as the definitions of functions =org-sidebar--todo-items= and =org-sidebar--upcoming-items=.
 
