@@ -128,10 +128,10 @@ text properties to act on items."
 
 (defcustom org-sidebar-default-fns '(org-sidebar--upcoming-items org-sidebar--todo-items)
   "Default sidebar functions."
-  :type '(choice (const :tag "Upcoming items" org-sidebar--upcoming-items)
-                 (const :tag "To-do items" org-sidebar--todo-items)
-                 (const :tag "Tree-view" org-sidebar-tree-buffer)
-                 (function :tag "Other function")))
+  :type '(repeat (choice (const :tag "Upcoming items" org-sidebar--upcoming-items)
+			 (const :tag "To-do items" org-sidebar--todo-items)
+			 (const :tag "Tree-view" org-sidebar-tree-buffer)
+			 (function :tag "Other function"))))
 
 ;;;; Structs
 
