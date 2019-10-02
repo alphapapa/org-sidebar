@@ -29,6 +29,10 @@ e.g. emphasis like =code= isn't applied, so the raw syntax is visible.
 
 *** TODO Customizable window/buffer layout
 
+*** TODO [#C] Add note about binding mouse-2 in regular Org buffers
+
+It's a bit confusing that mouse-2 toggles outline visibility in the tree buffer, but then in the regular Org buffer, by default, it yanks/pastes.  It would be helpful to rebind it in Org buffers.  Of course, users will have to make that decision themselves, but I should note it in the documentation with an example.
+
 * Ideas
 
 ** TODO [#A] Use ~org-ql-agenda~
@@ -58,7 +62,12 @@ For small Org buffers, it should be no problem, and might even work on a timer o
 
 It would probably make sense, at least, to update it on the after-save-hook...
 
-** MAYBE Add outline-overview sidebar
+** DONE Add outline-overview sidebar
+CLOSED: [2019-10-02 Wed 05:59]
+:LOGBOOK:
+-  State "DONE"       from "MAYBE"      [2019-10-02 Wed 05:59] \\
+   org-sidebar-tree!
+:END:
 
 e.g. like what I have in my config, aka a minimap
 
