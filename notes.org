@@ -35,6 +35,10 @@ It's a bit confusing that mouse-2 toggles outline visibility in the tree buffer,
 
 * Ideas
 
+** TODO org-sidebar-tree: arguments for outline path and ID
+
+It would be useful to be able to call =org-sidebar-tree= with an =olp= or =id= argument to show the tree for the tree at a location.  It would make it easy to treat trees as projects and quickly access them with the sidebar, rather than having to navigate to the tree first, open it in an indirect buffer, and then open the tree.
+
 ** TODO [#A] Use ~org-ql-agenda~
 
 Rather than formatting and making buffers in this package, ~org-ql-agenda~ does that.  All we need to do is direct its output to buffers that we then display in sidebars.  This will entail another refactoring.
