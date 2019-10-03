@@ -684,6 +684,7 @@ indirect buffer.  If `branches', show all descendant headings.  If
 (defun org-sidebar-show-subtree-entries ()
   "Like `org-show-subtree', but only expands entry text.
 Unlike `org-show-subtree', does not expand drawers."
+  ;; TODO: Should we use `org-cycle-hide-drawers' instead?
   (save-excursion
     (cl-loop do (org-show-entry)
              while (outline-next-heading))))
