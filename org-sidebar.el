@@ -446,6 +446,7 @@ If no items are found, return nil."
   :type '(choice (const :tag "Left" left)
                  (const :tag "Right" right)))
 
+;;;###autoload
 (defun org-sidebar-tree ()
   "Show tree-view sidebar."
   ;; TODO: I accidentally discovered that this almost works perfectly in Elisp
@@ -455,6 +456,7 @@ If no items are found, return nil."
   (let ((org-sidebar-side org-sidebar-tree-side))
     (org-sidebar--display-buffers (list (org-sidebar-tree-view-buffer)))))
 
+;;;###autoload
 (cl-defun org-sidebar-tree-view-buffer (&key (buffer (current-buffer)) &allow-other-keys)
   "Return a tree-view buffer for BUFFER."
   (-let* ((buffer-name (concat "<tree>" (buffer-name buffer)))
