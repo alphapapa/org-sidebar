@@ -673,13 +673,12 @@ indirect buffer.  If `branches', show all descendant headings.  If
 
 (defun org-sidebar--children-p ()
   "Return non-nil if entry at point has child headings."
-  (org-with-wide-buffer
-   (org-back-to-heading t)
-   (let ((end (save-excursion
-                ;; Returns point.
-                (org-end-of-subtree t))))
-     (goto-char (point-at-eol))
-     (re-search-forward "^\*+ " end t))))
+  ;; Code from `org-cycle-internal-local'.
+  (save-excursion
+    (let ((level (funcall outline-level)))
+      (outline-next-heading)
+      (and (org-at-heading-p t)
+	   (> (funcall outline-level) level)))))
 
 (defun org-sidebar-show-subtree-entries ()
   "Like `org-show-subtree', but only expands entry text.
