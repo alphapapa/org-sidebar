@@ -422,12 +422,12 @@ If no items are found, return nil."
                     "<mouse-1>" org-sidebar-tree-jump-mouse
                     "<double-mouse-1>" org-sidebar-tree-jump-mouse
                     "<triple-mouse-1>" org-sidebar-tree-jump-mouse
-                    "<mouse-2>" org-sidebar-tree-toggle-children-mouse
-                    "<double-mouse-2>" org-sidebar-tree-toggle-children-mouse
-                    "<triple-mouse-2>" org-sidebar-tree-toggle-children-mouse
+                    "<mouse-2>" org-sidebar-tree-cycle-mouse
+                    "<double-mouse-2>" org-sidebar-tree-cycle-mouse
+                    "<triple-mouse-2>" org-sidebar-tree-cycle-mouse
                     "<drag-mouse-1>" org-sidebar-tree-jump-branches-mouse
                     "<drag-mouse-2>" org-sidebar-tree-jump-entries-mouse
-                    "<tab>" org-sidebar-tree-toggle-children
+                    "<tab>" org-sidebar-tree-cycle
                     )))
     (set-keymap-parent map org-mode-map)
     (cl-loop for (key fn) on mappings by #'cddr
@@ -455,10 +455,10 @@ If no items are found, return nil."
   (let ((org-sidebar-side org-sidebar-tree-side))
     (org-sidebar--display-buffers (list (org-sidebar-tree-buffer)))))
 
-(defun org-sidebar-tree-toggle-or-jump (&optional children)
-  "Toggle visibility of current node, or jump to it in indirect buffer.
-If point is on heading stars, toggle visibility, otherwise jump
-to current heading in an indirect buffer.  If CHILDREN is
+(defun org-sidebar-tree-cycle-or-jump (&optional children)
+  "Cycle visibility of current node, or jump to it in indirect buffer.
+If point is on heading stars, cycle visibility, otherwise jump to
+current heading in an indirect buffer.  If CHILDREN is
 non-nil (interactively, with prefix), also show child headings in
 the indirect buffer."
   (interactive "P")
@@ -466,8 +466,8 @@ the indirect buffer."
     (error "Must be in a tree buffer"))
   (if (or (eq ?* (char-after))
           (eq ?* (char-before)))
-      ;; Point is on heading stars: toggle visibility.
-      (org-sidebar-tree-toggle-children)
+      ;; Point is on heading stars: cycle visibility.
+      (org-sidebar-tree-cycle)
     ;; Point on heading text: jump.
     (org-sidebar-tree-jump children)))
 
@@ -542,33 +542,39 @@ child entries.  Should be called from a tree-view buffer."
     (when children
       (org-show-subtree))))
 
-(defun org-sidebar-tree-toggle-children ()
-  "Toggle visibility of child headings at point.
-Like `outline-toggle-children', but doesn't show entry bodies."
-  (interactive)
-  ;; There seems to be no existing function to do simply this, to
-  ;; toggle the visibility of child headings without also showing the
-  ;; entry bodies, so we have to write our own.  This is a copy of
-  ;; `outline-toggle-children', except that it doesn't call
-  ;; `outline-show-entry'.
-  (save-excursion
-    (outline-back-to-heading)
-    (if (save-excursion
-          (outline-next-heading)
-          (not (outline-invisible-p)))
-        (outline-hide-subtree)
-      (outline-show-children))))
+(defun org-sidebar-tree-cycle ()
+  "Cycle visibility of heading at point and its descendants.
+Similar to `org-cycle-internal-local', but does not expand entry
+bodies.
 
-(defun org-sidebar-tree-toggle-children-mouse (event)
-  "Toggle visibility of child headings at EVENT.
-Like `outline-toggle-children', but doesn't show entry bodies."
+If heading at point has invisible children, show them.  Or, if
+this command is being repeated and heading at point has invisible
+descendants, show them.  Otherwise, hide the subtree."
+  (interactive)
+  (cond ((org-sidebar--children-p 'invisible)
+         ;; Has invisible children: show children.
+         (outline-show-children))
+        ((and (eq last-command this-command)
+              (save-excursion
+                (save-restriction
+                  (narrow-to-region (point) (save-excursion (org-end-of-subtree)))
+                  (cl-loop while (outline-next-heading)
+                           thereis (outline-invisible-p)))))
+         ;; This was last command and has invisible descendants: show branches.
+         (outline-show-branches))
+        (t ;; Nothing more to expand: hide tree.
+         (outline-hide-subtree))))
+
+(defun org-sidebar-tree-cycle-mouse (event)
+  "Cycle visibility of heading at EVENT and its descendants.
+Like `org-cycle-internal-local', but doesn't show entry bodies."
   (interactive "e")
   (-let* (((_type position _count) event)
           ((window _pos-or-area (_x . _y) _timestamp
                    _object text-pos . _) position))
     (with-selected-window window
       (goto-char text-pos)
-      (org-sidebar-tree-toggle-children))))
+      (org-sidebar-tree-cycle))))
 
 (cl-defun org-sidebar-tree-jump-mouse (event &key children)
   "Jump to tree for EVENT.
@@ -671,14 +677,19 @@ indirect buffer.  If `branches', show all descendant headings.  If
        (narrow-to-region beg end)
        (current-buffer)))))
 
-(defun org-sidebar--children-p ()
-  "Return non-nil if entry at point has child headings."
+(defun org-sidebar--children-p (&optional invisible)
+  "Return non-nil if entry at point has child headings.
+If INVISIBLE is non-nil, return non-nil if entry has invisible
+child headings.  Only children are considered, not other
+descendants."
   ;; Code from `org-cycle-internal-local'.
   (save-excursion
     (let ((level (funcall outline-level)))
       (outline-next-heading)
       (and (org-at-heading-p t)
-	   (> (funcall outline-level) level)))))
+	   (> (funcall outline-level) level)
+           (or (not invisible)
+               (outline-invisible-p))))))
 
 (defun org-sidebar-show-subtree-entries ()
   "Like `org-show-subtree', but only expands entry text.
