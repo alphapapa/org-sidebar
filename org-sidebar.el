@@ -130,7 +130,7 @@ text properties to act on items."
   "Default sidebar functions."
   :type '(repeat (choice (const :tag "Upcoming items" org-sidebar--upcoming-items)
 			 (const :tag "To-do items" org-sidebar--todo-items)
-			 (const :tag "Tree-view" org-sidebar-tree-buffer)
+			 (const :tag "Tree-view" org-sidebar-tree-view-buffer)
 			 (function :tag "Other function"))))
 
 ;;;; Structs
@@ -453,7 +453,44 @@ If no items are found, return nil."
   ;; work in a similar way, clicking on a function to edit it in a buffer.
   (interactive)
   (let ((org-sidebar-side org-sidebar-tree-side))
-    (org-sidebar--display-buffers (list (org-sidebar-tree-buffer)))))
+    (org-sidebar--display-buffers (list (org-sidebar-tree-view-buffer)))))
+
+(cl-defun org-sidebar-tree-view-buffer (&key (buffer (current-buffer)) &allow-other-keys)
+  "Return a tree-view buffer for BUFFER."
+  (-let* ((buffer-name (concat "<tree>" (buffer-name buffer)))
+          ((min max) (with-current-buffer buffer
+                       (list (point-min) (point-max))))
+          (existing-buffer (get-buffer buffer-name))
+          tree-buffer)
+    (when existing-buffer
+      ;; Buffer with name already exists.
+      (if (buffer-base-buffer existing-buffer)
+          ;; Buffer is indirect: kill it so we can remake it.
+          (kill-buffer existing-buffer)
+        ;; Buffer is not indirect: something is probably wrong, so warn.
+        (warn "Existing tree buffer that is not indirect: %s" existing-buffer)))
+    (setf tree-buffer (clone-indirect-buffer buffer-name nil 'norecord))
+    (with-current-buffer tree-buffer
+      (use-local-map org-sidebar-tree-map)
+      (setf mode-line-format nil
+            header-line-format (concat "Tree: " (buffer-name buffer)))
+      (toggle-truncate-lines 1)
+      (save-excursion
+        (goto-char min)
+        (unless (org-before-first-heading-p)
+          ;; Tree view only shows one subtree: expand its branches.
+          (outline-show-branches)))
+      (narrow-to-region min max)
+      (save-excursion
+        ;; Hide visible entry bodies.
+        (goto-char (point-min))
+        (when (org-before-first-heading-p)
+          (outline-next-visible-heading 1))
+        (cl-loop do (outline-hide-body)
+                 while (outline-next-visible-heading 1)))
+      (unless (org-before-first-heading-p)
+        (outline-back-to-heading)))
+    tree-buffer))
 
 (defun org-sidebar-tree-cycle-or-jump (&optional children)
   "Cycle visibility of current node, or jump to it in indirect buffer.
@@ -597,43 +634,6 @@ If CHILDREN is non-nil, also show children."
   "Jump to tree for EVENT, showing entries."
   (interactive "e")
   (org-sidebar-tree-jump-mouse event :children 'entries))
-
-(cl-defun org-sidebar-tree-buffer (&key (buffer (current-buffer)) &allow-other-keys)
-  "Return a tree-view buffer for BUFFER."
-  (-let* ((buffer-name (concat "<tree>" (buffer-name buffer)))
-          ((min max) (with-current-buffer buffer
-                       (list (point-min) (point-max))))
-          (existing-buffer (get-buffer buffer-name))
-          tree-buffer)
-    (when existing-buffer
-      ;; Buffer with name already exists.
-      (if (buffer-base-buffer existing-buffer)
-          ;; Buffer is indirect: kill it so we can remake it.
-          (kill-buffer existing-buffer)
-        ;; Buffer is not indirect: something is probably wrong, so warn.
-        (warn "Existing tree buffer that is not indirect: %s" existing-buffer)))
-    (setf tree-buffer (clone-indirect-buffer buffer-name nil 'norecord))
-    (with-current-buffer tree-buffer
-      (use-local-map org-sidebar-tree-map)
-      (setf mode-line-format nil
-            header-line-format (concat "Tree: " (buffer-name buffer)))
-      (toggle-truncate-lines 1)
-      (save-excursion
-        (goto-char min)
-        (unless (org-before-first-heading-p)
-          ;; Tree view only shows one subtree: expand its branches.
-          (outline-show-branches)))
-      (narrow-to-region min max)
-      (save-excursion
-        ;; Hide visible entry bodies.
-        (goto-char (point-min))
-        (when (org-before-first-heading-p)
-          (outline-next-visible-heading 1))
-        (cl-loop do (outline-hide-body)
-                 while (outline-next-visible-heading 1)))
-      (unless (org-before-first-heading-p)
-        (outline-back-to-heading)))
-    tree-buffer))
 
 (defun org-sidebar--subtree-buffer (&optional children)
   "Return indirect buffer for subtree at point.
