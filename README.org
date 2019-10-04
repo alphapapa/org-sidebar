@@ -131,7 +131,7 @@ Display a sidebar for ~org-ql~ ~QUERY~.  Interactively, with prefix, prompt for 
 :TOC:      0
 :END:
 
-** 0.2-pre
+** 0.2
 
 Extensive refactoring and improvements.
 
