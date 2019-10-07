@@ -35,14 +35,13 @@ It's a bit confusing that mouse-2 toggles outline visibility in the tree buffer,
 
 * Ideas
 
-** TODO org-sidebar-tree: arguments for outline path and ID
-
-It would be useful to be able to call =org-sidebar-tree= with an =olp= or =id= argument to show the tree for the tree at a location.  It would make it easy to treat trees as projects and quickly access them with the sidebar, rather than having to navigate to the tree first, open it in an indirect buffer, and then open the tree.
-
 ** TODO [#A] Use ~org-ql-agenda~
 
 Rather than formatting and making buffers in this package, ~org-ql-agenda~ does that.  All we need to do is direct its output to buffers that we then display in sidebars.  This will entail another refactoring.
 
+** TODO org-sidebar-tree: arguments for outline path and ID
+
+It would be useful to be able to call =org-sidebar-tree= with an =olp= or =id= argument to show the tree for the tree at a location.  It would make it easy to treat trees as projects and quickly access them with the sidebar, rather than having to navigate to the tree first, open it in an indirect buffer, and then open the tree.
 ** TODO Persistent list of nodes/searches
 
 I'd like to be able to add certain nodes of interest (sometimes with child nodes) to a sidebar.  It would also be nice to be able to add "views" or agenda searches for tags, etc (inspired by [[https://raw.githubusercontent.com/wakatara/HelvetiCan-Taskpaper-theme/master/HelvetiCan_taskpaper_theme_preview.png][this screenshot]]).
@@ -60,20 +59,18 @@ I'd like to be able to add certain nodes of interest (sometimes with child nodes
 
 Use a list of sorting functions, apply recursively, like in magit-todos.
 
+** MAYBE Toggle for sidebar
+:LOGBOOK:
+-  State "MAYBE"      from              [2019-10-07 Mon 13:19]
+:END:
+
+As mentioned [[https://lists.gnu.org/archive/html/emacs-orgmode/2019-10/msg00050.html][here]].
+
 ** MAYBE Automatically update sidebar buffers
 
 For small Org buffers, it should be no problem, and might even work on a timer or a hook.  For larger ones, it becomes expensive, and will probably have to be done manually.
 
 It would probably make sense, at least, to update it on the after-save-hook...
-
-** DONE Add outline-overview sidebar
-CLOSED: [2019-10-02 Wed 05:59]
-:LOGBOOK:
--  State "DONE"       from "MAYBE"      [2019-10-02 Wed 05:59] \\
-   org-sidebar-tree!
-:END:
-
-e.g. like what I have in my config, aka a minimap
 
 ** MAYBE Automatically size windows
 
@@ -100,6 +97,15 @@ e.g. changing TODO keyword, etc.  It would be good to reuse as much Org Agenda f
 :END:
 
 Seems like org-now should be rolled into org-sidebar as one of the panes that can be displayed.
+
+** DONE Add outline-overview sidebar
+CLOSED: [2019-10-02 Wed 05:59]
+:LOGBOOK:
+-  State "DONE"       from "MAYBE"      [2019-10-02 Wed 05:59] \\
+   org-sidebar-tree!
+:END:
+
+e.g. like what I have in my config, aka a minimap
 
 ** DONE Emacs 26 side windows
 CLOSED: [2018-08-02 Thu 11:03]
