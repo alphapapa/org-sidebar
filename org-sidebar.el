@@ -28,6 +28,11 @@
 ;; - `org-sidebar-tree:' Display tree-view sidebar for current Org
 ;;                       buffer.
 
+;; Toggling versions of those commands are also available:
+
+;; - `org-sidebar-toggle'
+;; - `org-sidebar-tree-toggle'
+
 ;; Customization options are in the `org-sidebar' group.
 
 ;; The functions `org-sidebar-tree-view-buffer' and
@@ -210,7 +215,32 @@ with two universal prefix arguments, the global value of
               org-sidebar-sidebars sidebars
               org-sidebar-group group
               org-sidebar-super-groups super-groups)))
-    (org-sidebar--display-buffers display-buffers)))
+    (org-sidebar--display-buffers display-buffers
+                                  :window-parameters (list (cons 'org-sidebar-window t)
+                                                           (cons 'org-sidebar-source-buffer-point-min (point-min))))))
+
+;;;###autoload
+(defun org-sidebar-toggle ()
+  "Toggle default sidebar window.
+If it is open and shows the view for the current buffer, delete
+it.  Otherwise, show it for current buffer."
+  (interactive)
+  (let* ((current-buffer (current-buffer))
+         (point-min (point-min))
+         (sidebar-window (--first (window-parameter it 'org-sidebar-window)
+                                  (window-at-side-list nil org-sidebar-side))))
+    ;; We only compare the first sidebar window, but that should be good enough.
+    (if (and sidebar-window
+             (with-current-buffer (window-buffer sidebar-window)
+               (and (eq org-sidebar-source-buffer current-buffer)
+                    ;; Compare point-min to detect narrowed buffers.
+                    (eq (window-parameter sidebar-window 'org-sidebar-source-buffer-point-min)
+                        point-min))))
+        ;; Sidebar is for current buffer: delete sidebar windows.
+        (mapc #'delete-window (--select (window-parameter it 'org-sidebar-window)
+                                        (window-at-side-list nil org-sidebar-side)))
+      ;; Sidebar is for a different buffer: show sidebar for current buffer.
+      (call-interactively #'org-sidebar))))
 
 ;;;###autoload
 (cl-defun org-sidebar-ql (&key query buffers-files narrow group-property sort)
@@ -311,19 +341,22 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
 
 ;;;; Functions
 
-(cl-defun org-sidebar--display-buffers (buffers)
-  "Display BUFFERS in the sidebar."
+(cl-defun org-sidebar--display-buffers (buffers &key window-parameters)
+  "Display BUFFERS in the sidebar.
+WINDOW-PARAMETERS are applied to each window that is displayed."
   (--each (window-at-side-list nil org-sidebar-side)
     ;; Delete existing org-sidebar windows on our side.
     (when (buffer-local-value 'org-sidebar-source-buffer (window-buffer it))
       (delete-window it)))
-  (let ((slot 0))
+  (let ((slot 0)
+        (window-parameters (append (list (cons 'no-delete-other-windows t))
+                                   window-parameters)))
     (--each buffers
       (display-buffer-in-side-window
        it
        (list (cons 'side org-sidebar-side)
              (cons 'slot slot)
-             (cons 'window-parameters (list (cons 'no-delete-other-windows t)))))
+             (cons 'window-parameters window-parameters)))
       (cl-incf slot))))
 
 (cl-defun org-sidebar--items-buffer (items)
@@ -462,7 +495,29 @@ If no items are found, return nil."
   ;; work in a similar way, clicking on a function to edit it in a buffer.
   (interactive)
   (let ((org-sidebar-side org-sidebar-tree-side))
-    (org-sidebar--display-buffers (list (org-sidebar-tree-view-buffer)))))
+    (org-sidebar--display-buffers (list (org-sidebar-tree-view-buffer))
+                                  :window-parameters (list (cons 'org-sidebar-tree-window t)))))
+
+;;;###autoload
+(defun org-sidebar-tree-toggle ()
+  "Toggle tree-view sidebar window.
+If it is open and shows the view for the current buffer, delete
+it.  Otherwise, show it for current buffer."
+  (interactive)
+  (let* ((parent-point-min (point-min))
+         (parent-buffer (or (buffer-base-buffer)
+                            (current-buffer)))
+         (tree-window (--first (window-parameter it 'org-sidebar-tree-window)
+                               (window-at-side-list nil org-sidebar-tree-side))))
+    (if (and tree-window
+             (with-current-buffer (window-buffer tree-window)
+               (and (eq parent-point-min (point-min))
+                    (or (eq parent-buffer (buffer-base-buffer))
+                        (eq parent-buffer (current-buffer))))))
+        ;; Tree displays current buffer: delete tree window.
+        (delete-window tree-window)
+      ;; Tree displays a different buffer: show tree for current buffer.
+      (org-sidebar-tree))))
 
 ;;;###autoload
 (cl-defun org-sidebar-tree-view-buffer (&key (buffer (current-buffer)) &allow-other-keys)
