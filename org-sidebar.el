@@ -469,6 +469,11 @@ If no items are found, return nil."
                     "<drag-mouse-1>" org-sidebar-tree-jump-branches-mouse
                     "<drag-mouse-2>" org-sidebar-tree-jump-entries-mouse
                     "<tab>" org-sidebar-tree-cycle
+                    ;; I don't know if it's universally necessary to bind
+                    ;; all three of these, but it seems to be on my Org.
+                    "<S-tab>" org-sidebar-tree-cycle-global
+                    "<S-iso-lefttab>" org-sidebar-tree-cycle-global
+                    "<backtab>" org-sidebar-tree-cycle-global
                     )))
     (set-keymap-parent map org-mode-map)
     (cl-loop for (key fn) on mappings by #'cddr
@@ -669,6 +674,39 @@ descendants, show them.  Otherwise, hide the subtree."
          (outline-show-branches))
         (t ;; Nothing more to expand: hide tree.
          (outline-hide-subtree))))
+
+(defun org-sidebar-tree-cycle-global ()
+  "Cycle global visiblity.
+Similar to `org-cycle-internal-global', but does not expand entry
+bodies."
+  (interactive)
+  (let* ((highest-invisible-heading-level
+          (save-excursion
+            (save-restriction
+              (widen)
+              (goto-char (point-min))
+              (when (org-before-first-heading-p)
+                (outline-next-heading))
+              (cl-loop when (outline-invisible-p)
+                       return (org-current-level)
+                       while (outline-next-heading)))))
+         (regexp (rx-to-string `(seq bol (repeat ,(or highest-invisible-heading-level 1) "*") (1+ blank)))))
+    (if highest-invisible-heading-level
+        ;; Some headings are invisible: Show all headings at that level.
+        (save-excursion
+          (goto-char (point-min))
+          (cl-loop while (re-search-forward regexp nil t)
+                   do (progn
+                        (org-up-heading-safe)
+                        (outline-show-children)
+                        (org-end-of-subtree))))
+      ;; All headings visible: Hide all.
+      (save-excursion
+        (goto-char (point-min))
+        (when (org-before-first-heading-p)
+          (outline-next-heading))
+        (cl-loop do (outline-hide-subtree)
+                 while (re-search-forward regexp nil t))))))
 
 (defun org-sidebar-tree-cycle-mouse (event)
   "Cycle visibility of heading at EVENT and its descendants.

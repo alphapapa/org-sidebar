@@ -87,6 +87,7 @@ To display custom-defined sidebars, call the function =org-sidebar= with the arg
 
 In the tree buffer, the keymap =org-sidebar-tree-map= is used, which is based on =org-mode-map= (so you can use Org keybindings to manipulate nodes), and has these additional bindings by default:
 
++  =<S-tab>=: Cycle global node visibility.
 +  =<tab>=: Toggle visibility of child nodes.
 +  =<mouse-2>=: Toggle visibility of child nodes.
 +  =<mouse-1>=: Jump to heading using default jump function; or, if heading stars are clicked, toggle visibility of child nodes.
