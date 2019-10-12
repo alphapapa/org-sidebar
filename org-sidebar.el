@@ -575,7 +575,8 @@ the indirect buffer."
 
 (defun org-sidebar-tree-jump (&optional children)
   "Jump to heading at point using `org-sidebar-tree-jump-fn'.
-Argument CHILDREN controls how child entries are displayed:
+If point is before first heading, show base buffer.  Argument
+CHILDREN controls how child entries are displayed:
 
 If nil (interactively, without prefix), only show the entry's own
 body text.  If `children' (with one universal prefix), also show
@@ -585,12 +586,14 @@ descendants and their body text."
   (interactive "p")
   (unless (buffer-base-buffer)
     (error "Must be in a tree buffer"))
-  (funcall org-sidebar-tree-jump-fn
-           :children (pcase children
-                       (1 nil)
-                       (4 'children)
-                       (16 'branches)
-                       (64 'entries))))
+  (if (org-before-first-heading-p)
+      (org-sidebar-tree-jump-source)
+    (funcall org-sidebar-tree-jump-fn
+             :children (pcase children
+                         (1 nil)
+                         (4 'children)
+                         (16 'branches)
+                         (64 'entries)))))
 
 (cl-defun org-sidebar-tree-jump-indirect (&key children)
   "Jump to an indirect buffer showing the heading at point.
@@ -680,7 +683,8 @@ Like `org-cycle-internal-local', but doesn't show entry bodies."
 
 (cl-defun org-sidebar-tree-jump-mouse (event &key children)
   "Jump to tree for EVENT.
-If CHILDREN is non-nil, also show children."
+If point is before first heading, jump to base buffer.  If
+CHILDREN is non-nil, also show children."
   (interactive "e")
   (-let* (((_type position _count) event)
           ((window _pos-or-area (_x . _y) _timestamp
@@ -688,7 +692,9 @@ If CHILDREN is non-nil, also show children."
     (with-selected-window window
       (goto-char text-pos)
       (goto-char (point-at-bol))
-      (funcall org-sidebar-tree-jump-fn :children children))))
+      (if (org-before-first-heading-p)
+          (org-sidebar-tree-jump-source)
+        (funcall org-sidebar-tree-jump-fn :children children)))))
 
 (defun org-sidebar-tree-jump-branches-mouse (event)
   "Jump to tree for EVENT, showing branches."
