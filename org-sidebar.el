@@ -753,6 +753,7 @@ indirect buffer.  If `branches', show all descendant headings.  If
   ;; what we need in a reusable way, so we have to reimplement it.
   (org-with-wide-buffer
    ;; TODO: Use `org-get-heading' after upgrading to newer Org.
+   ;; TODO: Ensure that links in heading text are replaced with descriptions.
    (let* ((buffer-name (concat (nth 4 (org-heading-components)) "::" (file-name-nondirectory (buffer-file-name (buffer-base-buffer)))))
           (old-buffer (get-buffer buffer-name))
           (_killed-old-buffer-p (when old-buffer
