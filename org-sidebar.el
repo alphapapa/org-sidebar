@@ -487,7 +487,7 @@ If no items are found, return nil."
                  (const :tag "Source buffer" org-sidebar-tree-jump-source)
                  (function :tag "Custom function")))
 
-(defcustom org-sidebar-tree-side 'right
+(defcustom org-sidebar-tree-side 'left
   "Which side to show the tree sidebar on."
   :type '(choice (const :tag "Left" left)
                  (const :tag "Right" right)))
