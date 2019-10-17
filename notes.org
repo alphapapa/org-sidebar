@@ -35,6 +35,22 @@ It's a bit confusing that mouse-2 toggles outline visibility in the tree buffer,
 
 * Ideas
 
+** MAYBE Use font-locking to hide non-heading text in tree buffer
+
+Suggested by =itistheblurstoftimes= [[https://www.reddit.com/r/orgmode/comments/dbsngi/finally_solving_the_lack_of_a_treeview_navigation/f3x80qa/][here]]:
+
+#+BEGIN_QUOTE
+What about using font lock on the tree buffer? This is buggy, but seems promising. I have no idea if I am using font-lock properly, but regardless using overlays in the tree buffer seems the best way to change its appearance since they are not shared.
+
+(setq org-sidebar-tree--hide-body-keyword
+      `(("\\(^[^*]+\\)\n"
+     (0
+      (progn
+        (ov (match-beginning 1) (match-end 1) '(invisible t))
+        nil)))))
+(font-lock-add-keywords nil org-sidebar-tree--hide-body-keyword)
+#+END_QUOTE
+
 ** TODO [#A] Use ~org-ql-agenda~
 
 Rather than formatting and making buffers in this package, ~org-ql-agenda~ does that.  All we need to do is direct its output to buffers that we then display in sidebars.  This will entail another refactoring.
