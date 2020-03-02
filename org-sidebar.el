@@ -78,12 +78,10 @@
 
 (defvar org-sidebar-map
   (let ((map (make-sparse-keymap))
-        (mappings '(
-                    "RET" org-sidebar-jump
+        (mappings '("RET" org-sidebar-jump
                     "<mouse-1>" org-sidebar-jump
                     "g" org-sidebar-refresh
-                    "q" bury-buffer
-                    )))
+                    "q" bury-buffer)))
     (cl-loop for (key fn) on mappings by #'cddr
              do (define-key map (kbd key) fn))
     map)
@@ -461,8 +459,7 @@ If no items are found, return nil."
 
 (defvar org-sidebar-tree-map
   (let ((map (make-sparse-keymap))
-        (mappings '(
-                    "<return>" org-sidebar-tree-jump
+        (mappings '("<return>" org-sidebar-tree-jump
                     "<mouse-1>" org-sidebar-tree-jump-mouse
                     "<double-mouse-1>" org-sidebar-tree-jump-mouse
                     "<triple-mouse-1>" org-sidebar-tree-jump-mouse
@@ -476,8 +473,7 @@ If no items are found, return nil."
                     ;; all three of these, but it seems to be on my Org.
                     "<S-tab>" org-sidebar-tree-cycle-global
                     "<S-iso-lefttab>" org-sidebar-tree-cycle-global
-                    "<backtab>" org-sidebar-tree-cycle-global
-                    )))
+                    "<backtab>" org-sidebar-tree-cycle-global)))
     (set-keymap-parent map org-mode-map)
     (cl-loop for (key fn) on mappings by #'cddr
              do (define-key map (kbd key) fn))
