@@ -252,7 +252,7 @@ BUFFERS-FILES: A list of buffers and/or files to search.
 NARROW: When non-nil, don't widen buffers before searching.
 
 GROUP-PROPERTY: One of the following symbols: `category',
-`parent', `priority', `todo'.
+`parent', `priority', `todo', `ts'.
 
 SORT: One or a list of `org-ql' sorting functions, like `date' or
 `priority'."
@@ -276,7 +276,8 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
                                                                        "category"
                                                                        "parent"
                                                                        "priority"
-                                                                       "todo-keyword"))
+                                                                       "todo-keyword"
+                                                                       "ts"))
                                            ("Don't group" nil)
                                            (property (intern property))))
                        :sort (when (equal current-prefix-arg '(4))
@@ -290,20 +291,22 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
                                  ("Don't sort" nil)
                                  (sort (intern sort)))))))
   (org-sidebar
-   :sidebars (make-org-sidebar
-              :items (org-ql-query
-                       :select 'element-with-markers
-                       :from buffers-files
-                       :where query
-                       :narrow narrow
-                       :order-by sort)
-              :name (prin1-to-string query)
-              :super-groups (list (pcase group-property
-                                    ('nil nil)
-                                    ('category '(:auto-category))
-                                    ('parent '(:auto-parent))
-                                    ('priority '(:auto-priority))
-                                    ('todo-keyword '(:auto-todo)))))
+   :fns (lambda (&rest _ignore)
+          (make-org-sidebar
+           :items (org-ql-query
+                    :select 'element-with-markers
+                    :from buffers-files
+                    :where query
+                    :narrow narrow
+                    :order-by sort)
+           :name (prin1-to-string query)
+           :super-groups (list (pcase group-property
+                                 ('nil nil)
+                                 ('category '(:auto-category))
+                                 ('parent '(:auto-parent))
+                                 ('priority '(:auto-priority))
+                                 ('todo-keyword '(:auto-todo))
+                                 ('ts '(:auto-ts))))))
    :group group-property))
 
 (defun org-sidebar-refresh ()
