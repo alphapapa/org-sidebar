@@ -260,8 +260,7 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
                  (unless (or (equal current-prefix-arg '(4))
                              (derived-mode-p 'org-mode))
                    (user-error "Not an Org buffer: %s" (buffer-name)))
-                 (list :query (read-minibuffer "Query: ")
-                       :buffers-files (if (equal current-prefix-arg '(4))
+                 (list :buffers-files (if (equal current-prefix-arg '(4))
                                           (--if-let (read-from-minibuffer "Buffers/Files (blank for current buffer): ")
                                               (pcase it
                                                 ("" (list (current-buffer)))
@@ -269,6 +268,7 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
                                                 (_ (s-split (rx (1+ space)) it)))
                                             (list (current-buffer)))
                                         (list (current-buffer)))
+                       :query (read-minibuffer "Query: ")
                        :narrow (not (eq current-prefix-arg '(4)))
                        :group-property (when (equal current-prefix-arg '(4))
                                          (pcase (completing-read "Group by: "
