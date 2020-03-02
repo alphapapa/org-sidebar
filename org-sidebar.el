@@ -78,30 +78,20 @@
 
 (defvar org-sidebar-map
   (let ((map (make-sparse-keymap))
-        (mappings '("RET" org-sidebar-jump
-                    "<mouse-1>" org-sidebar-jump
-                    "g" org-sidebar-refresh
+        (mappings '("g" org-sidebar-refresh
+                    "r" org-sidebar-refresh
                     "q" bury-buffer)))
+    (set-keymap-parent map org-ql-view-map)
     (cl-loop for (key fn) on mappings by #'cddr
              do (define-key map (kbd key) fn))
     map)
   "Keymap for `org-sidebar' buffers.")
 
 ;; Buffer-local vars for refreshing sidebars.
-(defvar-local org-sidebar-source-buffer nil
-  "The source Org buffer for entries in this sidebar buffer.")
 (defvar-local org-sidebar-buffers nil
-  "The `buffers' argument to `org-sidebar'.")
-(defvar-local org-sidebar-sidebars nil
-  "The `sidebars' argument to `org-sidebar'.")
-(defvar-local org-sidebar-group nil
-  "The group setting for entries in this sidebar buffer.")
-(defvar-local org-sidebar-super-groups nil
-  "The super groups for entries in this sidebar buffer.")
-(defvar-local org-sidebar-fns nil
-  "The functions for entries in this sidebar buffer.")
-(defvar-local org-sidebar-header nil
-  "The header in this sidebar buffer.")
+  "Buffers created by calling `org-sidebar'.
+Should be set in an Org buffer in which `org-sidebar' is called.
+Used to refresh all related sidebar buffers.")
 
 ;;;; Customization
 
@@ -144,78 +134,41 @@ text properties to act on items."
 			 (const :tag "Tree-view" org-sidebar-tree-view-buffer)
 			 (function :tag "Other function"))))
 
-;;;; Structs
-
-(cl-defstruct org-sidebar
-  ;; Naming things is hard.  Maybe this will help organize things.
-
-  ;; This struct is intended to be made at runtime.  The ITEMS slot should
-  ;; be the result of an `org-ql' query with ACTION `element-with-markers'.
-  ;; See default item functions.  The struct is passed by function
-  ;; `org-sidebar' to function `org-sidebar--items-buffer', which returns a
-  ;; buffer displaying the struct's items.
-  name description items group-fn super-groups)
+(defcustom org-ql-sidebar-buffer-setup-hook
+  '(toggle-truncate-lines
+    (lambda ()
+      "Set `mode-line-format' to nil."
+      (setf mode-line-format nil)))
+  "Functions run in sidebar buffers before display.
+Each function is run without arguments in each buffer."
+  :type 'hook)
 
 ;;;; Commands
 
 ;;;###autoload
-(cl-defun org-sidebar (&key buffers fns sidebars group super-groups)
+(defun org-sidebar (fns)
   "Display the Org Sidebar.
 
 Interactively, display the sidebars configured in
 `org-sidebar-default-fns'.
 
-BUFFERS may be one or a list of buffers to display in the
-sidebar.
-
-FNS may be one or a list of functions, each of which may return a
-buffer or a `org-sidebar' struct.
-
-SIDEBARS may be one or a list of `org-sidebar' structs.
-
-When GROUP is non-nil (interactively, with one universal prefix
-argument), and when SUPER-GROUPS is nil, call each function with
-the `group' keyword argument non-nil.
-
-SUPER-GROUPS may be a list of groups according to
-`org-super-agenda-groups', in which case the items in the buffers
-will be grouped accordingly (where applicable).  Interactively,
-with two universal prefix arguments, the global value of
-`org-super-agenda-groups' is used."
-  (interactive (list :fns org-sidebar-default-fns
-                     :group (equal current-prefix-arg '(4))
-                     :super-groups (when (equal current-prefix-arg '(16))
-                                     org-super-agenda-groups)))
+FNS should be one or a list of functions which return a buffer to
+be displayed in the sidebar.  Each one is called with the current
+buffer as its argument."
+  (interactive (list org-sidebar-default-fns))
   (let* ((source-buffer (current-buffer))
-         (buffers (cl-etypecase buffers
-                    (list buffers)
-                    (buffer (list buffers))))
          (fns (cl-etypecase fns
                 (list fns)
                 (function (list fns))))
-         (sidebars (cl-etypecase sidebars
-                     (list sidebars)
-                     (org-sidebar (list sidebars))))
-         (fns-buffers (cl-loop for fn in fns
-                               for result = (funcall fn :group group :super-groups super-groups)
-                               when result
-                               collect (cl-etypecase result
-                                         (buffer result)
-                                         (org-sidebar (org-sidebar--items-buffer result)))))
-         (sidebars-buffers (-map #'org-sidebar--items-buffer sidebars))
-         (display-buffers (append buffers fns-buffers sidebars-buffers)))
-    (--each display-buffers
-      ;; Save settings in buffers for refreshing.
-      (with-current-buffer it
-        (setf org-sidebar-source-buffer source-buffer
-              org-sidebar-buffers buffers
-              org-sidebar-fns fns
-              org-sidebar-sidebars sidebars
-              org-sidebar-group group
-              org-sidebar-super-groups super-groups)))
-    (org-sidebar--display-buffers display-buffers
-      :window-parameters (list (cons 'org-sidebar-window t)
-                               (cons 'org-sidebar-source-buffer-point-min (point-min))))))
+         (display-buffers (cl-loop for fn in fns
+				   collect (funcall fn source-buffer))))
+    (when display-buffers
+      (--each display-buffers
+        (with-current-buffer it
+          (setf org-sidebar-buffers display-buffers)))
+      (org-sidebar--display-buffers display-buffers
+        :window-parameters (list (cons 'org-sidebar-window t)
+                                 (cons 'org-sidebar-source-buffer-point-min (point-min)))))))
 
 ;;;###autoload
 (defun org-sidebar-toggle ()
@@ -241,7 +194,7 @@ it.  Otherwise, show it for current buffer."
       (call-interactively #'org-sidebar))))
 
 ;;;###autoload
-(cl-defun org-sidebar-ql (&key query buffers-files narrow group-property sort)
+(cl-defun org-sidebar-ql (buffers-files query &key narrow super-groups sort)
   "Display a sidebar for `org-ql' QUERY.
 Interactively, with prefix, prompt for these variables:
 
@@ -249,102 +202,50 @@ BUFFERS-FILES: A list of buffers and/or files to search.
 
 NARROW: When non-nil, don't widen buffers before searching.
 
-GROUP-PROPERTY: One of the following symbols: `category',
-`parent', `priority', `todo', `ts'.
+SUPER-GROUPS: An `org-super-agenda' grouping form.
 
 SORT: One or a list of `org-ql' sorting functions, like `date' or
 `priority'."
   (interactive (progn
-                 (unless (or (equal current-prefix-arg '(4))
-                             (derived-mode-p 'org-mode))
-                   (user-error "Not an Org buffer: %s" (buffer-name)))
-                 (list :buffers-files (if (equal current-prefix-arg '(4))
-                                          (--if-let (read-from-minibuffer "Buffers/Files (blank for current buffer): ")
-                                              (pcase it
-                                                ("" (list (current-buffer)))
-                                                ((rx bos "(") (-flatten (eval (read it))))
-                                                (_ (s-split (rx (1+ space)) it)))
-                                            (list (current-buffer)))
-                                        (list (current-buffer)))
-                       :query (read-minibuffer "Query: ")
-                       :narrow (not (eq current-prefix-arg '(4)))
-                       :group-property (when (equal current-prefix-arg '(4))
-                                         (pcase (completing-read "Group by: "
-                                                                 (list "Don't group"
-                                                                       "category"
-                                                                       "parent"
-                                                                       "priority"
-                                                                       "todo-keyword"
-                                                                       "ts"))
-                                           ("Don't group" nil)
-                                           (property (intern property))))
-                       :sort (when (equal current-prefix-arg '(4))
-                               (pcase (completing-read "Sort by: "
-                                                       (list "Don't sort"
-                                                             "date"
-                                                             "deadline"
-                                                             "priority"
-                                                             "scheduled"
-                                                             "todo"))
-                                 ("Don't sort" nil)
-                                 (sort (intern sort)))))))
+		 (cl-assert (or (equal current-prefix-arg '(4))
+				(derived-mode-p 'org-mode))
+			    nil "Not an Org buffer: %s" (buffer-name))
+		 ;; Copied from the `org-ql-search' interactive form.
+		 (list (org-ql-view--complete-buffers-files)
+		       (read-string "Query: " (when org-ql-view-query
+						(format "%S" org-ql-view-query)))
+		       :narrow (or org-ql-view-narrow (eq current-prefix-arg '(4)))
+		       :super-groups (org-ql-view--complete-super-groups)
+		       :sort (org-ql-view--complete-sort))))
   (org-sidebar
-   :fns (lambda (&rest _ignore)
-          (make-org-sidebar
-           :items (org-ql-query
-                    :select 'element-with-markers
-                    :from buffers-files
-                    :where query
-                    :narrow narrow
-                    :order-by sort)
-           :name (prin1-to-string query)
-           :super-groups (list (pcase group-property
-                                 ('nil nil)
-                                 ('category '(:auto-category))
-                                 ('parent '(:auto-parent))
-                                 ('priority '(:auto-priority))
-                                 ('todo-keyword '(:auto-todo))
-                                 ('ts '(:auto-ts))))))
-   :group group-property))
+   (lambda (&rest _ignore)
+     (let ((display-buffer
+	    (generate-new-buffer "org-ql-sidebar")))
+       (save-window-excursion
+	 ;; `org-ql-search' displays the buffer, but we don't want to do that here.
+	 (org-ql-search buffers-files query
+	   :narrow narrow :sort sort
+	   :super-groups super-groups
+	   :buffer display-buffer))
+       display-buffer))))
 
 (defun org-sidebar-refresh ()
-  "Refresh current sidebar buffers."
+  "Refresh sidebar buffers.
+Refreshes the current sidebar buffer and other associated sidebar
+buffers."
   (interactive)
-  ;; `org-sidebar' needs to be called in the original source buffer, but we
-  ;; need to get the saved arguments that are stored in the sidebar buffer.
-  (let ((buffers org-sidebar-buffers)
-        (fns org-sidebar-fns)
-        (group org-sidebar-group)
-        (super-groups org-sidebar-super-groups))
-    (save-excursion
-      (when org-sidebar-source-buffer
-        (switch-to-buffer org-sidebar-source-buffer))
-      (org-sidebar :buffers buffers
-                   :fns fns
-                   :group group
-                   :super-groups super-groups))))
-
-(defun org-sidebar-jump ()
-  "Jump to entry at sidebar buffer's point in source buffer."
-  (interactive)
-  (if-let* ((marker (get-text-property (point) 'org-marker))
-            (buffer (marker-buffer marker)))
-      (progn
-        (--if-let (get-buffer-window buffer)
-            (select-window it)
-          (pop-to-buffer buffer))
-        (goto-char marker)
-        (org-reveal)
-        (org-show-entry)
-        (when org-sidebar-jump-indirect
-          (org-tree-to-indirect-buffer)))
-    (user-error "Item's buffer no longer exists")))
+  (save-window-excursion
+    (--each org-sidebar-buffers
+      (with-current-buffer it
+        (org-ql-view-refresh)
+        (org-sidebar--prepare-buffer)))))
 
 ;;;; Functions
 
 (cl-defun org-sidebar--display-buffers (buffers &key window-parameters)
   "Display BUFFERS in the sidebar.
 WINDOW-PARAMETERS are applied to each window that is displayed."
+  (declare (indent defun))
   (--each (window-at-side-list nil org-sidebar-side)
     ;; Delete existing org-sidebar windows on our side.
     (when (buffer-local-value 'org-sidebar-source-buffer (window-buffer it))
@@ -353,6 +254,8 @@ WINDOW-PARAMETERS are applied to each window that is displayed."
         (window-parameters (append (list (cons 'no-delete-other-windows t))
                                    window-parameters)))
     (--each buffers
+      (with-current-buffer it
+	(org-sidebar--prepare-buffer))
       (display-buffer-in-side-window
        it
        (list (cons 'side org-sidebar-side)
@@ -360,100 +263,58 @@ WINDOW-PARAMETERS are applied to each window that is displayed."
              (cons 'window-parameters window-parameters)))
       (cl-incf slot))))
 
-(cl-defun org-sidebar--items-buffer (items)
-  "Return a buffer containing ITEMS, ready to be displayed.
-ITEMS should be an `org-sidebar' struct.
-FIXME: Note that group-fn and super-groups can't both be set.  Or figure out a smart way to handle it."
-  (pcase-let* (((cl-struct org-sidebar name description items group-fn super-groups) items)
-               (buffer-name (propertize name 'help-echo description))
-               (string (cond (group-fn (->> items
-                                            (-group-by group-fn)
-                                            (org-sidebar--format-grouped-items)))
-                             (super-groups (let ((org-super-agenda-groups super-groups))
-                                             (->> items
-                                                  (mapcar org-sidebar-format-fn)
-                                                  (org-super-agenda--group-items)
-                                                  (s-join "\n"))))
-                             (t (->> items
-                                     (mapcar org-sidebar-format-fn)
-                                     (s-join "\n")))))
-               (inhibit-read-only t))
-    (with-current-buffer (get-buffer-create buffer-name)
-      (org-sidebar--prepare-buffer buffer-name)
-      (insert string)
-      (goto-char (point-min))
-      (current-buffer))))
-
-(defun org-sidebar--format-grouped-items (groups)
-  "Return items in GROUPS formatted as a string.
-GROUPS should be grouped like with `-group-by'."
-  (with-temp-buffer
-    (--each groups
-      (-let (((header . items) it))
-        (insert "\n" (or header "None") "\n\n")
-        (--each items
-          (insert (funcall org-sidebar-format-fn it) "\n"))))
-    (buffer-string)))
-
-(defun org-sidebar--prepare-buffer (name)
-  "Prepare current buffer as a sidebar buffer.
-Header line is set to NAME string, and
-`org-sidebar-source-buffer' is set to SOURCE-BUFFER."
+(defun org-sidebar--prepare-buffer ()
+  "Prepare current buffer as a sidebar buffer."
   (let ((inhibit-read-only t))
-    (setq header-line-format (concat " " name)
-          mode-line-format nil)
-    (read-only-mode 1)
+    (setf header-line-format (org-ql-view--header-line-format :title org-ql-view-title))
     (use-local-map org-sidebar-map)
-    (erase-buffer)
     (goto-char (point-min))
-    (toggle-truncate-lines 1)))
+    (run-hook-with-args 'org-ql-sidebar-buffer-setup-hook)))
 
 ;;;;; Default item functions
 
-(cl-defun org-sidebar--upcoming-items (&rest _ignore)
-  "Return `org-sidebar' struct for upcoming items in current buffer.
-If no items are found, return nil.
-The `org-ql' query is:
+;; FIXME: These create new buffers every time, even when one already
+;; exists for the source buffer.  Maybe we could store a hash table in
+;; a special variable, weakly keyed on source buffers, with the values
+;; being an alist keyed by function name, whose values are the sidebar
+;; buffers.  Then, when calling org-sidebar, we would lookup the
+;; buffers for the source buffer and use existing ones.  Feels a
+;; little messy, but I don't think there's a better way.
 
-    (and (or (scheduled)
-             (deadline))
-         (not (done)))"
-  (when-let* ((items (org-ql-select (current-buffer)
-                       '(and (or (scheduled)
-                                 (deadline))
-                             (not (done)))
-                       :action 'element-with-markers
-                       :narrow t :sort 'date)))
-    (make-org-sidebar
-     :name (concat "Upcoming items: " (buffer-name))
-     :description "Non-done items with a deadline or scheduled date in the current buffer"
-     ;; NOTE: This commented code produces date headers that are more visually pleasing
-     ;; to me, but since moving the functionality into `org-super-agenda', it probably
-     ;; doesn't make sense to do this here.  But I'm going to keep the code here for now.
-     ;; :group-fn (lambda (item)
-     ;;             ;; Return a date header string for grouping.
-     ;;             (propertize (org-timestamp-format (or (org-element-property :scheduled item)
-     ;;                                                   (org-element-property :deadline item))
-     ;;                                               org-sidebar-date-format)
-     ;;                         'face '(:inherit variable-pitch :weight bold)))
-     :super-groups '((:auto-planning))
-     :items items)))
+(defun org-sidebar--upcoming-items (source-buffer)
+  "Return an Org QL View buffer showing upcoming items in SOURCE-BUFFER."
+  (let ((display-buffer
+	 (generate-new-buffer (format "org-sidebar<%s>" (buffer-name source-buffer))))
+	(title (concat "Upcoming items in: " (buffer-name source-buffer))))
+    (save-window-excursion
+      ;; `org-ql-search' displays the buffer, but we don't want to do that here.
+      (org-ql-search source-buffer
+	'(and (or (scheduled)
+		  (deadline))
+	      (not (done)))
+	:narrow t :sort 'date
+	:super-groups '((:auto-planning))
+	:buffer display-buffer
+	:title title))
+    display-buffer))
 
-(defun org-sidebar--todo-items (&rest _ignore)
-  "Return sidebar for unscheduled, un-deadlined to-do items in current buffer.
-If no items are found, return nil."
-  (when-let* ((items (org-ql-select (current-buffer)
-                       '(and (todo)
-                             (not (or (scheduled)
-                                      (deadline))))
-                       :sort '(priority todo)
-                       :narrow t
-                       :action 'element-with-markers)))
-    (make-org-sidebar
-     :name (concat "To-do items: " (buffer-name))
-     :description "Unscheduled, un-deadlined to-do items in current buffer."
-     :items items
-     :super-groups '((:auto-todo)))))
+(defun org-sidebar--todo-items (source-buffer)
+  "Return an Org QL View buffer showing unscheduled, un-deadlined items in SOURCE-BUFFER."
+  (let ((display-buffer
+	 (generate-new-buffer (format "org-sidebar<%s>" (buffer-name source-buffer))))
+	(title (propertize (concat "To-do items in: " (buffer-name source-buffer))
+                           'help-echo "Unscheduled, un-deadlined to-do items")))
+    (save-window-excursion
+      ;; `org-ql-search' displays the buffer, but we don't want to do that here.
+      (org-ql-search source-buffer
+	'(and (todo)
+              (not (or (scheduled)
+                       (deadline))))
+	:narrow t :sort 'date
+	:super-groups '((:auto-todo))
+	:buffer display-buffer
+	:title title))
+    display-buffer))
 
 ;;;; Tree-view
 
