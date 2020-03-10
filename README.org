@@ -142,7 +142,7 @@ Display a sidebar for ~org-ql~ ~QUERY~.  Interactively, with prefix, prompt for 
 :TOC:      0
 :END:
 
-** 0.3-pre
+** 0.3
 
 *Added*
 +  Commands ~org-sidebar-toggle~ and ~org-sidebar-tree-toggle~, which toggle the respective sidebars on/off.
