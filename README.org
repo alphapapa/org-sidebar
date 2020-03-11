@@ -145,7 +145,8 @@ Display a sidebar for ~org-ql~ ~QUERY~.  Interactively, with prefix, prompt for 
 
 ** 0.4-pre
 
-Nothing new yet.
+*Fixes*
++  =TAB= binding in =org-sidebar-tree-map=.
 
 ** 0.3
 

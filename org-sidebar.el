@@ -470,7 +470,7 @@ If no items are found, return nil."
                     "<triple-mouse-2>" org-sidebar-tree-cycle-mouse
                     "<drag-mouse-1>" org-sidebar-tree-jump-branches-mouse
                     "<drag-mouse-2>" org-sidebar-tree-jump-entries-mouse
-                    "<tab>" org-sidebar-tree-cycle
+                    "TAB" org-sidebar-tree-cycle
                     ;; I don't know if it's universally necessary to bind
                     ;; all three of these, but it seems to be on my Org.
                     "<S-tab>" org-sidebar-tree-cycle-global
