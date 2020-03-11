@@ -173,6 +173,7 @@ buffer as its argument."
       (setf org-sidebar-sidebar-buffers display-buffers)
       (--each display-buffers
         (with-current-buffer it
+          (org-sidebar--prepare-buffer)
           (setf org-sidebar-source-buffer source-buffer)))
       (org-sidebar--display-buffers display-buffers
         :window-parameters (list (cons 'org-sidebar-window t)
@@ -264,8 +265,6 @@ WINDOW-PARAMETERS are applied to each window that is displayed."
         (window-parameters (append (list (cons 'no-delete-other-windows t))
                                    window-parameters)))
     (--each buffers
-      (with-current-buffer it
-	(org-sidebar--prepare-buffer))
       (display-buffer-in-side-window
        it
        (list (cons 'side org-sidebar-side)
@@ -274,7 +273,8 @@ WINDOW-PARAMETERS are applied to each window that is displayed."
       (cl-incf slot))))
 
 (defun org-sidebar--prepare-buffer ()
-  "Prepare current buffer as a sidebar buffer."
+  "Prepare current buffer as a sidebar buffer.
+This is not used for `org-sidebar-tree' buffers."
   (let ((inhibit-read-only t))
     (setf header-line-format (org-ql-view--header-line-format :title org-ql-view-title))
     (use-local-map org-sidebar-map)
