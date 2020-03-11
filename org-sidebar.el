@@ -214,8 +214,8 @@ with two universal prefix arguments, the global value of
               org-sidebar-group group
               org-sidebar-super-groups super-groups)))
     (org-sidebar--display-buffers display-buffers
-                                  :window-parameters (list (cons 'org-sidebar-window t)
-                                                           (cons 'org-sidebar-source-buffer-point-min (point-min))))))
+      :window-parameters (list (cons 'org-sidebar-window t)
+                               (cons 'org-sidebar-source-buffer-point-min (point-min))))))
 
 ;;;###autoload
 (defun org-sidebar-toggle ()

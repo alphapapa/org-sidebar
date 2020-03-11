@@ -19,6 +19,7 @@ The tree-view sidebar aids navigating an outline and editing entries individuall
 :PROPERTIES:
 :TOC:      this
 :END:
+
   -  [[#installation][Installation]]
   -  [[#usage][Usage]]
   -  [[#changelog][Changelog]]
