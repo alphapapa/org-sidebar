@@ -88,10 +88,13 @@
   "Keymap for `org-sidebar' buffers.")
 
 ;; Buffer-local vars for refreshing sidebars.
-(defvar-local org-sidebar-buffers nil
+(defvar-local org-sidebar-sidebar-buffers nil
   "Buffers created by calling `org-sidebar'.
 Should be set in an Org buffer in which `org-sidebar' is called.
 Used to refresh all related sidebar buffers.")
+
+(defvar-local org-sidebar-source-buffer nil
+  "Org buffer that this sidebar buffer is about.")
 
 ;;;; Customization
 
@@ -156,6 +159,10 @@ FNS should be one or a list of functions which return a buffer to
 be displayed in the sidebar.  Each one is called with the current
 buffer as its argument."
   (interactive (list org-sidebar-default-fns))
+  (when org-sidebar-sidebar-buffers
+    ;; Kill existing sidebar buffers for the source buffer.
+    (mapc #'kill-buffer org-sidebar-sidebar-buffers)
+    (setf org-sidebar-sidebar-buffers nil))
   (let* ((source-buffer (current-buffer))
          (fns (cl-etypecase fns
                 (list fns)
@@ -163,9 +170,10 @@ buffer as its argument."
          (display-buffers (cl-loop for fn in fns
 				   collect (funcall fn source-buffer))))
     (when display-buffers
+      (setf org-sidebar-sidebar-buffers display-buffers)
       (--each display-buffers
         (with-current-buffer it
-          (setf org-sidebar-buffers display-buffers)))
+          (setf org-sidebar-source-buffer source-buffer)))
       (org-sidebar--display-buffers display-buffers
         :window-parameters (list (cons 'org-sidebar-window t)
                                  (cons 'org-sidebar-source-buffer-point-min (point-min)))))))
@@ -176,14 +184,14 @@ buffer as its argument."
 If it is open and shows the view for the current buffer, delete
 it.  Otherwise, show it for current buffer."
   (interactive)
-  (let* ((current-buffer (current-buffer))
+  (let* ((source-buffer (current-buffer))
          (point-min (point-min))
          (sidebar-window (--first (window-parameter it 'org-sidebar-window)
                                   (window-at-side-list nil org-sidebar-side))))
     ;; We only compare the first sidebar window, but that should be good enough.
     (if (and sidebar-window
              (with-current-buffer (window-buffer sidebar-window)
-               (and (eq org-sidebar-source-buffer current-buffer)
+               (and (eq org-sidebar-source-buffer source-buffer)
                     ;; Compare point-min to detect narrowed buffers.
                     (eq (window-parameter sidebar-window 'org-sidebar-source-buffer-point-min)
                         point-min))))
@@ -235,7 +243,7 @@ Refreshes the current sidebar buffer and other associated sidebar
 buffers."
   (interactive)
   (save-window-excursion
-    (--each org-sidebar-buffers
+    (--each (buffer-local-value 'org-sidebar-display-buffers org-sidebar-source-buffer)
       (with-current-buffer it
         (org-ql-view-refresh)
         (org-sidebar--prepare-buffer)))))
@@ -246,10 +254,12 @@ buffers."
   "Display BUFFERS in the sidebar.
 WINDOW-PARAMETERS are applied to each window that is displayed."
   (declare (indent defun))
-  (--each (window-at-side-list nil org-sidebar-side)
+  (when-let* ((side-windows (window-at-side-list nil org-sidebar-side))
+              (sidebar-buffers (--select (buffer-local-value 'org-sidebar-source-buffer it)
+                                         (mapcar #'window-buffer side-windows)))
+              (sidebar-windows (mapcar #'get-buffer-window sidebar-buffers)))
     ;; Delete existing org-sidebar windows on our side.
-    (when (buffer-local-value 'org-sidebar-source-buffer (window-buffer it))
-      (delete-window it)))
+    (mapc #'delete-window sidebar-windows))
   (let ((slot 0)
         (window-parameters (append (list (cons 'no-delete-other-windows t))
                                    window-parameters)))
@@ -273,19 +283,13 @@ WINDOW-PARAMETERS are applied to each window that is displayed."
 
 ;;;;; Default item functions
 
-;; FIXME: These create new buffers every time, even when one already
-;; exists for the source buffer.  Maybe we could store a hash table in
-;; a special variable, weakly keyed on source buffers, with the values
-;; being an alist keyed by function name, whose values are the sidebar
-;; buffers.  Then, when calling org-sidebar, we would lookup the
-;; buffers for the source buffer and use existing ones.  Feels a
-;; little messy, but I don't think there's a better way.
-
 (defun org-sidebar--upcoming-items (source-buffer)
   "Return an Org QL View buffer showing upcoming items in SOURCE-BUFFER."
   (let ((display-buffer
 	 (generate-new-buffer (format "org-sidebar<%s>" (buffer-name source-buffer))))
 	(title (concat "Upcoming items in: " (buffer-name source-buffer))))
+    (with-current-buffer display-buffer
+      (setf org-sidebar-buffers source-buffer))
     (save-window-excursion
       ;; `org-ql-search' displays the buffer, but we don't want to do that here.
       (org-ql-search source-buffer
@@ -304,6 +308,8 @@ WINDOW-PARAMETERS are applied to each window that is displayed."
 	 (generate-new-buffer (format "org-sidebar<%s>" (buffer-name source-buffer))))
 	(title (propertize (concat "To-do items in: " (buffer-name source-buffer))
                            'help-echo "Unscheduled, un-deadlined to-do items")))
+    (with-current-buffer display-buffer
+      (setf org-sidebar-buffers source-buffer))
     (save-window-excursion
       ;; `org-ql-search' displays the buffer, but we don't want to do that here.
       (org-ql-search source-buffer
