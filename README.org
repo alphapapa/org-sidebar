@@ -145,6 +145,9 @@ Display a sidebar for ~org-ql~ ~QUERY~.  Interactively, with prefix, prompt for 
 
 ** 0.4-pre
 
+*Changes*
++  Use =org-ql-view= for sidebar buffers instead of bespoke implementation.
+
 *Fixes*
 +  =TAB= binding in =org-sidebar-tree-map=.
 

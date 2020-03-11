@@ -51,10 +51,6 @@ What about using font lock on the tree buffer? This is buggy, but seems promisin
 (font-lock-add-keywords nil org-sidebar-tree--hide-body-keyword)
 #+END_QUOTE
 
-** TODO [#A] Use ~org-ql-agenda~
-
-Rather than formatting and making buffers in this package, ~org-ql-agenda~ does that.  All we need to do is direct its output to buffers that we then display in sidebars.  This will entail another refactoring.
-
 ** TODO org-sidebar-tree: arguments for outline path and ID
 
 It would be useful to be able to call =org-sidebar-tree= with an =olp= or =id= argument to show the tree for the tree at a location.  It would make it easy to treat trees as projects and quickly access them with the sidebar, rather than having to navigate to the tree first, open it in an indirect buffer, and then open the tree.
@@ -113,6 +109,16 @@ e.g. changing TODO keyword, etc.  It would be good to reuse as much Org Agenda f
 :END:
 
 Seems like org-now should be rolled into org-sidebar as one of the panes that can be displayed.
+
+** DONE [#A] Use ~org-ql-agenda~
+CLOSED: [2020-03-11 Wed 15:59]
+:LOGBOOK:
+-  State "DONE"       from "TODO"       [2020-03-11 Wed 15:59]
+:END:
+
+Rather than formatting and making buffers in this package, ~org-ql-agenda~ does that.  All we need to do is direct its output to buffers that we then display in sidebars.  This will entail another refactoring.
+
+[2020-03-11 Wed 15:59]  Done using =org-ql-view= buffers.
 
 ** DONE Add outline-overview sidebar
 CLOSED: [2019-10-02 Wed 05:59]
