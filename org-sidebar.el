@@ -457,6 +457,8 @@ If no items are found, return nil."
 
 ;;;; Tree-view
 
+;; TODO: Prevent self-insert-command in tree buffer, at least optionally.
+
 (defvar org-sidebar-tree-map
   (let ((map (make-sparse-keymap))
         (mappings '("<return>" org-sidebar-tree-jump
