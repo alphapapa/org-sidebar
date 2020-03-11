@@ -142,6 +142,10 @@ Display a sidebar for ~org-ql~ ~QUERY~.  Interactively, with prefix, prompt for 
 :TOC:      0
 :END:
 
+** 0.4-pre
+
+Nothing new yet.
+
 ** 0.3
 
 *Added*
