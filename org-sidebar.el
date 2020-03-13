@@ -241,6 +241,29 @@ TITLE: Title for sidebar buffer."
            :buffer display-buffer :title title))
        display-buffer))))
 
+;;;###autoload
+(defun org-sidebar-backlinks ()
+  "Show sidebar with entries that link to the current entry.
+The entry must have an ID or CUSTOM_ID property; links to the
+heading text are not found.  Note that searching for links to
+entries that have both ID and CUSTOM_ID properties set is much
+slower than searching for links to entries with just one of those
+properties."
+  (interactive)
+  (let* ((id (org-entry-get (point) "ID"))
+         (custom-id (org-entry-get (point) "CUSTOM_ID"))
+         ;; FIXME: Do CUSTOM_ID links also have an "id:" prefix?
+         (query (cond ((and id custom-id)
+                       ;; This will be slow because it isn't optimized to a single regexp.  :(
+                       (warn "Entry has both ID and CUSTOM_ID set; query will be slow")
+                       `(or (link :target ,(concat "id:" id))
+                            (link :target ,(concat "id:" custom-id))))
+                      ((or id custom-id)
+                       `(link :target ,(concat "id:" (or id custom-id))))
+                      (t (error "Entry has no ID nor CUSTOM_ID property")))))
+    (org-sidebar-ql (org-ql-search-directories-files)
+      query :title (concat "Links to: " (org-get-heading t t)))))
+
 (defun org-sidebar-refresh ()
   "Refresh sidebar buffers.
 Refreshes the current sidebar buffer and other associated sidebar

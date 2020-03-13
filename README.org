@@ -134,6 +134,10 @@ Display a sidebar for ~org-ql~ ~QUERY~.  Interactively, with prefix, prompt for 
 +  ~GROUP-PROPERTY~: One of the following symbols: ~category~, ~parent~, ~priority~, ~todo~.
 +  ~SORT~: One or a list of ~org-ql~ sorting functions, like ~date~ or ~priority~.
 
+**** org-sidebar-backlinks
+
+Show sidebar with entries that link to the current entry.  The entry must have an =ID= or =CUSTOM_ID= property; links to the heading text are not found.  Note that searching for links to entries that have both =ID= and =CUSTOM_ID= properties set is much slower than searching for links to entries with just one of those properties.
+
 * Changelog
 :PROPERTIES:
 :TOC:      0
