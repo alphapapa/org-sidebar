@@ -289,7 +289,7 @@ This is not used for `org-sidebar-tree' buffers."
 	 (generate-new-buffer (format "org-sidebar<%s>" (buffer-name source-buffer))))
 	(title (concat "Upcoming items in: " (buffer-name source-buffer))))
     (with-current-buffer display-buffer
-      (setf org-sidebar-buffers source-buffer))
+      (setf org-sidebar-source-buffer source-buffer))
     (save-window-excursion
       ;; `org-ql-search' displays the buffer, but we don't want to do that here.
       (org-ql-search source-buffer
@@ -309,7 +309,7 @@ This is not used for `org-sidebar-tree' buffers."
 	(title (propertize (concat "To-do items in: " (buffer-name source-buffer))
                            'help-echo "Unscheduled, un-deadlined to-do items")))
     (with-current-buffer display-buffer
-      (setf org-sidebar-buffers source-buffer))
+      (setf org-sidebar-source-buffer source-buffer))
     (save-window-excursion
       ;; `org-ql-search' displays the buffer, but we don't want to do that here.
       (org-ql-search source-buffer
