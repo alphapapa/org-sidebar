@@ -203,7 +203,7 @@ it.  Otherwise, show it for current buffer."
       (call-interactively #'org-sidebar))))
 
 ;;;###autoload
-(cl-defun org-sidebar-ql (buffers-files query &key narrow super-groups sort)
+(cl-defun org-sidebar-ql (buffers-files query &key narrow super-groups sort title)
   "Display a sidebar for `org-ql' QUERY.
 Interactively, with prefix, prompt for these variables:
 
@@ -214,7 +214,9 @@ NARROW: When non-nil, don't widen buffers before searching.
 SUPER-GROUPS: An `org-super-agenda' grouping form.
 
 SORT: One or a list of `org-ql' sorting functions, like `date' or
-`priority'."
+`priority'.
+
+TITLE: Title for sidebar buffer."
   (declare (indent defun))
   (interactive (progn
 		 (cl-assert (or (equal current-prefix-arg '(4))
@@ -236,7 +238,7 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
 	 (org-ql-search buffers-files query
 	   :narrow narrow :sort sort
 	   :super-groups super-groups
-	   :buffer display-buffer))
+           :buffer display-buffer :title title))
        display-buffer))))
 
 (defun org-sidebar-refresh ()
