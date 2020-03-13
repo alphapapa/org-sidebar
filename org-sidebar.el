@@ -166,7 +166,7 @@ buffer as its argument."
   (let* ((source-buffer (current-buffer))
          (fns (cl-etypecase fns
                 (list fns)
-                (function (list fns))))
+                (atom (list fns))))
          (display-buffers (cl-loop for fn in fns
 				   collect (funcall fn source-buffer))))
     (when display-buffers
