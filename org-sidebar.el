@@ -215,6 +215,7 @@ SUPER-GROUPS: An `org-super-agenda' grouping form.
 
 SORT: One or a list of `org-ql' sorting functions, like `date' or
 `priority'."
+  (declare (indent defun))
   (interactive (progn
 		 (cl-assert (or (equal current-prefix-arg '(4))
 				(derived-mode-p 'org-mode))
