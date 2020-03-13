@@ -133,9 +133,9 @@ text properties to act on items."
 (defcustom org-sidebar-default-fns '(org-sidebar--upcoming-items org-sidebar--todo-items)
   "Default sidebar functions."
   :type '(repeat (choice (const :tag "Upcoming items" org-sidebar--upcoming-items)
-			 (const :tag "To-do items" org-sidebar--todo-items)
-			 (const :tag "Tree-view" org-sidebar-tree-view-buffer)
-			 (function :tag "Other function"))))
+                         (const :tag "To-do items" org-sidebar--todo-items)
+                         (const :tag "Tree-view" org-sidebar-tree-view-buffer)
+                         (function :tag "Other function"))))
 
 (defcustom org-ql-sidebar-buffer-setup-hook
   '(toggle-truncate-lines
@@ -168,7 +168,7 @@ buffer as its argument."
                 (list fns)
                 (atom (list fns))))
          (display-buffers (cl-loop for fn in fns
-				   collect (funcall fn source-buffer))))
+                                   collect (funcall fn source-buffer))))
     (when display-buffers
       (setf org-sidebar-sidebar-buffers display-buffers)
       (--each display-buffers
@@ -219,25 +219,25 @@ SORT: One or a list of `org-ql' sorting functions, like `date' or
 TITLE: Title for sidebar buffer."
   (declare (indent defun))
   (interactive (progn
-		 (cl-assert (or (equal current-prefix-arg '(4))
-				(derived-mode-p 'org-mode))
-			    nil "Not an Org buffer: %s" (buffer-name))
-		 ;; Copied from the `org-ql-search' interactive form.
-		 (list (org-ql-view--complete-buffers-files)
-		       (read-string "Query: " (when org-ql-view-query
-						(format "%S" org-ql-view-query)))
-		       :narrow (or org-ql-view-narrow (eq current-prefix-arg '(4)))
-		       :super-groups (org-ql-view--complete-super-groups)
-		       :sort (org-ql-view--complete-sort))))
+                 (cl-assert (or (equal current-prefix-arg '(4))
+                                (derived-mode-p 'org-mode))
+                            nil "Not an Org buffer: %s" (buffer-name))
+                 ;; Copied from the `org-ql-search' interactive form.
+                 (list (org-ql-view--complete-buffers-files)
+                       (read-string "Query: " (when org-ql-view-query
+                                                (format "%S" org-ql-view-query)))
+                       :narrow (or org-ql-view-narrow (eq current-prefix-arg '(4)))
+                       :super-groups (org-ql-view--complete-super-groups)
+                       :sort (org-ql-view--complete-sort))))
   (org-sidebar
    (lambda (&rest _ignore)
      (let ((display-buffer
-	    (generate-new-buffer "org-ql-sidebar")))
+            (generate-new-buffer "org-ql-sidebar")))
        (save-window-excursion
-	 ;; `org-ql-search' displays the buffer, but we don't want to do that here.
-	 (org-ql-search buffers-files query
-	   :narrow narrow :sort sort
-	   :super-groups super-groups
+         ;; `org-ql-search' displays the buffer, but we don't want to do that here.
+         (org-ql-search buffers-files query
+           :narrow narrow :sort sort
+           :super-groups super-groups
            :buffer display-buffer :title title))
        display-buffer))))
 
@@ -289,40 +289,40 @@ This is not used for `org-sidebar-tree' buffers."
 (defun org-sidebar--upcoming-items (source-buffer)
   "Return an Org QL View buffer showing upcoming items in SOURCE-BUFFER."
   (let ((display-buffer
-	 (generate-new-buffer (format "org-sidebar<%s>" (buffer-name source-buffer))))
-	(title (concat "Upcoming items in: " (buffer-name source-buffer))))
+         (generate-new-buffer (format "org-sidebar<%s>" (buffer-name source-buffer))))
+        (title (concat "Upcoming items in: " (buffer-name source-buffer))))
     (with-current-buffer display-buffer
       (setf org-sidebar-source-buffer source-buffer))
     (save-window-excursion
       ;; `org-ql-search' displays the buffer, but we don't want to do that here.
       (org-ql-search source-buffer
-	'(and (or (scheduled)
-		  (deadline))
-	      (not (done)))
-	:narrow t :sort 'date
-	:super-groups '((:auto-planning))
-	:buffer display-buffer
-	:title title))
+        '(and (or (scheduled)
+                  (deadline))
+              (not (done)))
+        :narrow t :sort 'date
+        :super-groups '((:auto-planning))
+        :buffer display-buffer
+        :title title))
     display-buffer))
 
 (defun org-sidebar--todo-items (source-buffer)
   "Return an Org QL View buffer showing unscheduled, un-deadlined items in SOURCE-BUFFER."
   (let ((display-buffer
-	 (generate-new-buffer (format "org-sidebar<%s>" (buffer-name source-buffer))))
-	(title (propertize (concat "To-do items in: " (buffer-name source-buffer))
+         (generate-new-buffer (format "org-sidebar<%s>" (buffer-name source-buffer))))
+        (title (propertize (concat "To-do items in: " (buffer-name source-buffer))
                            'help-echo "Unscheduled, un-deadlined to-do items")))
     (with-current-buffer display-buffer
       (setf org-sidebar-source-buffer source-buffer))
     (save-window-excursion
       ;; `org-ql-search' displays the buffer, but we don't want to do that here.
       (org-ql-search source-buffer
-	'(and (todo)
+        '(and (todo)
               (not (or (scheduled)
                        (deadline))))
-	:narrow t :sort 'date
-	:super-groups '((:auto-todo))
-	:buffer display-buffer
-	:title title))
+        :narrow t :sort 'date
+        :super-groups '((:auto-todo))
+        :buffer display-buffer
+        :title title))
     display-buffer))
 
 ;;;; Tree-view
@@ -668,7 +668,7 @@ descendants."
     (let ((level (funcall outline-level)))
       (outline-next-heading)
       (and (org-at-heading-p t)
-	   (> (funcall outline-level) level)
+           (> (funcall outline-level) level)
            (or (not invisible)
                (outline-invisible-p))))))
 
