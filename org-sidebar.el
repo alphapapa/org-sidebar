@@ -441,7 +441,11 @@ it.  Otherwise, show it for current buffer."
       (toggle-truncate-lines 1)
       (save-excursion
         (goto-char min)
-        (unless (org-before-first-heading-p)
+        (if (org-before-first-heading-p)
+            (progn
+              ;; Narrow buffer to exclude pre-heading content.
+              (outline-next-heading)
+              (setf min (point)))
           ;; Tree view only shows one subtree: expand its branches.
           (outline-show-branches)))
       (narrow-to-region min max)

@@ -152,6 +152,11 @@ Show sidebar with entries that link to the current entry.  The entry must have a
 *Fixes*
 +  =TAB= binding in =org-sidebar-tree-map=.
 
+** 0.3.1
+
+*Fixed*
++  Exclude pre-heading content from tree buffer.  (Issue [[https://github.com/alphapapa/org-sidebar/issues/23][#23]].  Thanks to [[https://github.com/yuchen-lea][@yuchen-lea]] for reporting.)
+
 ** 0.3
 
 *Added*
