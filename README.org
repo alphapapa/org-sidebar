@@ -142,6 +142,11 @@ Display a sidebar for ~org-ql~ ~QUERY~.  Interactively, with prefix, prompt for 
 :TOC:      0
 :END:
 
+** 0.3.1
+
+*Fixed*
++  Exclude pre-heading content from tree buffer.  (Issue [[https://github.com/alphapapa/org-sidebar/issues/23][#23]].  Thanks to [[https://github.com/yuchen-lea][@yuchen-lea]] for reporting.)
+
 ** 0.3
 
 *Added*

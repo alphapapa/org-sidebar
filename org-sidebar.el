@@ -2,7 +2,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/org-sidebar
-;; Version: 0.3
+;; Version: 0.3.1
 ;; Package-Requires: ((emacs "26.1") (s "1.10.0") (dash "2.13") (dash-functional "1.2.0") (org "9.0") (org-ql "0.2") (org-super-agenda "1.0"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
@@ -546,7 +546,11 @@ it.  Otherwise, show it for current buffer."
       (toggle-truncate-lines 1)
       (save-excursion
         (goto-char min)
-        (unless (org-before-first-heading-p)
+        (if (org-before-first-heading-p)
+            (progn
+              ;; Narrow buffer to exclude pre-heading content.
+              (outline-next-heading)
+              (setf min (point)))
           ;; Tree view only shows one subtree: expand its branches.
           (outline-show-branches)))
       (narrow-to-region min max)
