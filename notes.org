@@ -1,7 +1,12 @@
-
+#+TITLE: org-sidebar notes
 
 * Tasks
 
+** TODO [#A] Bookmark support
+
+*** TODO Bookmark tree sidebar
+
+*** TODO Bookmark query sidebars
 ** TODO [#A] Document keymap
 
 ** TODO [#A] Way to refresh only one sidebar buffer
