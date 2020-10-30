@@ -395,7 +395,7 @@ This is not used for `org-sidebar-tree' buffers."
   (interactive)
   (let ((org-sidebar-side org-sidebar-tree-side))
     (org-sidebar--display-buffers (list (org-sidebar-tree-view-buffer))
-                                  :window-parameters (list (cons 'org-sidebar-tree-window t)))))
+      :window-parameters (list (cons 'org-sidebar-tree-window t)))))
 
 ;;;###autoload
 (defun org-sidebar-tree-toggle ()
@@ -404,13 +404,15 @@ If it is open and shows the view for the current buffer, delete
 it.  Otherwise, show it for current buffer."
   (interactive)
   (let* ((parent-point-min (point-min))
+	 (parent-point-max (point-max))
          (parent-buffer (or (buffer-base-buffer)
                             (current-buffer)))
          (tree-window (--first (window-parameter it 'org-sidebar-tree-window)
                                (window-at-side-list nil org-sidebar-tree-side))))
     (if (and tree-window
              (with-current-buffer (window-buffer tree-window)
-               (and (eq parent-point-min (point-min))
+               (and (<= parent-point-min (point-min))
+		    (= parent-point-max (point-max))
                     (or (eq parent-buffer (buffer-base-buffer))
                         (eq parent-buffer (current-buffer))))))
         ;; Tree displays current buffer: delete tree window.

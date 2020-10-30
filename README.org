@@ -152,6 +152,11 @@ Show sidebar with entries that link to the current entry.  The entry must have a
 *Fixes*
 +  =TAB= binding in =org-sidebar-tree-map=.
 
+** 0.3.2
+
+*Fixed*
++  Command =org-sidebar-tree-toggle= didn't always toggle the tree sidebar off.  (Fixes [[https://github.com/alphapapa/org-sidebar/issues/34][#34]].  Thanks to [[https://github.com/titaniumbones][Matt Price]] and [[https://github.com/mkb6][mkb6]] for reporting.)
+
 ** 0.3.1
 
 *Fixed*
