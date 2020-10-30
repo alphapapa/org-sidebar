@@ -71,6 +71,7 @@
 (require 's)
 
 (require 'org-ql)
+(require 'org-ql-search)
 (require 'org-ql-view)
 (require 'org-super-agenda)
 
