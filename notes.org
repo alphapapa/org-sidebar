@@ -15,6 +15,9 @@ The current refresh command refreshes all sidebar buffers (or, at least, all of 
 So it would be good to be able to update just one sidebar window/buffer.  The hard part is going to be doing so in a flexible, smart way.  Maybe it would be simple enough to just do the single-buffer, no-window-delete refresh when the buffer being refreshed was originally made in a command that displayed a single sidebar window.  That will require modifying several functions, but it shouldn't be too hard.
 
 ** TODO [#B] Use document title in tree sidebar header
+
+** TODO [#B] Set sidebar windows as [[info:elisp#Dedicated Windows][dedicated]]
+
 ** TODO [#B] Automatically cleanup old sidebar buffers
 
 e.g. when an Org buffer is closed, any of its sidebar buffers shouldn't be left open.
