@@ -2,6 +2,8 @@
 
 * Tasks
 
+** TODO [#A] [[https://github.com/alphapapa/org-sidebar/pull/35][Fix issue #26: `org-sidebar-refresh` by egh · Pull Request #35 · alphapapa/org-sidebar · GitHub]]
+
 ** TODO [#A] Bookmark support
 
 *** TODO Bookmark query sidebars
