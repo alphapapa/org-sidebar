@@ -72,6 +72,8 @@ I'd like to be able to add certain nodes of interest (sometimes with child nodes
 
 Use a list of sorting functions, apply recursively, like in magit-todos.
 
+[2020-10-31 Sat 18:57]  This should be covered by using =magit-section= in =org-ql-view=.
+
 ** MAYBE Automatically size windows
 
 e.g. when there are only a few lines in one buffer but many in another, it doesn't make sense for them to be equally sized.
