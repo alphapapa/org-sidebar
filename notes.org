@@ -4,19 +4,17 @@
 
 ** TODO [#A] Bookmark support
 
+*** TODO Bookmark query sidebars
+
 *** TODO Bookmark tree sidebar
 
-*** TODO Bookmark query sidebars
 ** TODO [#A] Document keymap
+
 ** TODO [#A] Way to refresh only one sidebar buffer
 
 The current refresh command refreshes all sidebar buffers (or, at least, all of the ones that were launched by the same invocation).  Sometimes that is what's wanted, e.g. with the default sidebar, which is two buffers showing results from one buffer).  But it works by deleting all org-sidebar windows first, which messes with window layout, which is especially a problem when only displaying one sidebar window in a sidebar containing other windows not made by org-sidebar.
 
 So it would be good to be able to update just one sidebar window/buffer.  The hard part is going to be doing so in a flexible, smart way.  Maybe it would be simple enough to just do the single-buffer, no-window-delete refresh when the buffer being refreshed was originally made in a command that displayed a single sidebar window.  That will require modifying several functions, but it shouldn't be too hard.
-
-** TODO [#B] Use document title in tree sidebar header
-
-** TODO [#B] Set sidebar windows as [[info:elisp#Dedicated Windows][dedicated]]
 
 ** TODO [#B] Automatically cleanup old sidebar buffers
 
@@ -31,6 +29,10 @@ e.g. when an Org buffer is closed, any of its sidebar buffers shouldn't be left 
 
 e.g. emphasis like =code= isn't applied, so the raw syntax is visible.
 
+** TODO [#B] Set sidebar windows as [[info:elisp#Dedicated Windows][dedicated]]
+
+** TODO [#B] Use document title in tree sidebar header
+
 ** TODO [#C] Made sidebars more customizable
 
 *** TODO Customizable =org-ql= queries
@@ -43,25 +45,10 @@ It's a bit confusing that mouse-2 toggles outline visibility in the tree buffer,
 
 * Ideas
 
-** MAYBE Use font-locking to hide non-heading text in tree buffer
-
-Suggested by =itistheblurstoftimes= [[https://www.reddit.com/r/orgmode/comments/dbsngi/finally_solving_the_lack_of_a_treeview_navigation/f3x80qa/][here]]:
-
-#+BEGIN_QUOTE
-What about using font lock on the tree buffer? This is buggy, but seems promising. I have no idea if I am using font-lock properly, but regardless using overlays in the tree buffer seems the best way to change its appearance since they are not shared.
-
-(setq org-sidebar-tree--hide-body-keyword
-      `(("\\(^[^*]+\\)\n"
-     (0
-      (progn
-        (ov (match-beginning 1) (match-end 1) '(invisible t))
-        nil)))))
-(font-lock-add-keywords nil org-sidebar-tree--hide-body-keyword)
-#+END_QUOTE
-
 ** TODO org-sidebar-tree: arguments for outline path and ID
 
 It would be useful to be able to call =org-sidebar-tree= with an =olp= or =id= argument to show the tree for the tree at a location.  It would make it easy to treat trees as projects and quickly access them with the sidebar, rather than having to navigate to the tree first, open it in an indirect buffer, and then open the tree.
+
 ** TODO Persistent list of nodes/searches
 
 I'd like to be able to add certain nodes of interest (sometimes with child nodes) to a sidebar.  It would also be nice to be able to add "views" or agenda searches for tags, etc (inspired by [[https://raw.githubusercontent.com/wakatara/HelvetiCan-Taskpaper-theme/master/HelvetiCan_taskpaper_theme_preview.png][this screenshot]]).
@@ -79,34 +66,19 @@ I'd like to be able to add certain nodes of interest (sometimes with child nodes
 
 Use a list of sorting functions, apply recursively, like in magit-todos.
 
-** MAYBE Toggle for sidebar
-:LOGBOOK:
--  State "MAYBE"      from              [2019-10-07 Mon 13:19]
-:END:
+** MAYBE Automatically size windows
 
-As mentioned [[https://lists.gnu.org/archive/html/emacs-orgmode/2019-10/msg00050.html][here]].
+e.g. when there are only a few lines in one buffer but many in another, it doesn't make sense for them to be equally sized.
+
+** MAYBE Automatically switch sidebar buffers when Org buffer changes
+
+e.g. in the current window layout, if the Org buffer displayed in the main window is changed, maybe (optionally) the sidebar buffers should change, too.
 
 ** MAYBE Automatically update sidebar buffers
 
 For small Org buffers, it should be no problem, and might even work on a timer or a hook.  For larger ones, it becomes expensive, and will probably have to be done manually.
 
 It would probably make sense, at least, to update it on the after-save-hook...
-
-** MAYBE Automatically size windows
-
-e.g. when there are only a few lines in one buffer but many in another, it doesn't make sense for them to be equally sized.
-
-** MAYBE Customizeable grouping
-
-Especially for tasks.  It would be good to have a generalized implementation for grouping, printing items beneath headers, etc.
-
-** MAYBE Automatically switch sidebar buffers when Org buffer changes
-
-e.g. in the current window layout, if the Org buffer displayed in the main window is changed, maybe (optionally) the sidebar buffers should change, too.
-
-** MAYBE More commands for sidebar buffers
-
-e.g. changing TODO keyword, etc.  It would be good to reuse as much Org Agenda functionality as possible, but since they aren't actual agenda buffers (and since I think Org only allows one actual Agenda buffer), that may not be possible.
 
 ** MAYBE Combine org-now and org-sidebar?
 :PROPERTIES:
@@ -117,6 +89,30 @@ e.g. changing TODO keyword, etc.  It would be good to reuse as much Org Agenda f
 :END:
 
 Seems like org-now should be rolled into org-sidebar as one of the panes that can be displayed.
+
+** MAYBE Customizeable grouping
+
+Especially for tasks.  It would be good to have a generalized implementation for grouping, printing items beneath headers, etc.
+
+** MAYBE More commands for sidebar buffers
+
+e.g. changing TODO keyword, etc.  It would be good to reuse as much Org Agenda functionality as possible, but since they aren't actual agenda buffers (and since I think Org only allows one actual Agenda buffer), that may not be possible.
+
+** MAYBE Use font-locking to hide non-heading text in tree buffer
+
+Suggested by =itistheblurstoftimes= [[https://www.reddit.com/r/orgmode/comments/dbsngi/finally_solving_the_lack_of_a_treeview_navigation/f3x80qa/][here]]:
+
+#+BEGIN_QUOTE
+What about using font lock on the tree buffer? This is buggy, but seems promising. I have no idea if I am using font-lock properly, but regardless using overlays in the tree buffer seems the best way to change its appearance since they are not shared.
+
+(setq org-sidebar-tree--hide-body-keyword
+      `(("\\(^[^*]+\\)\n"
+     (0
+      (progn
+        (ov (match-beginning 1) (match-end 1) '(invisible t))
+        nil)))))
+(font-lock-add-keywords nil org-sidebar-tree--hide-body-keyword)
+#+END_QUOTE
 
 ** DONE [#A] Use ~org-ql-agenda~
 CLOSED: [2020-03-11 Wed 15:59]
@@ -150,6 +146,16 @@ Support for side windows is now official. The display action function 'display-b
 
 Support for atomic windows - rectangular compositions of windows treated by 'split-window', 'delete-window' and 'delete-other-windows' like a single live window - is now official. For details consult the section "(elisp) Atomic Windows" in the ELisp manual.
 #+END_QUOTE
+
+** DONE Toggle for sidebar
+CLOSED: [2020-10-31 Sat 18:48]
+:LOGBOOK:
+-  State "DONE"       from "MAYBE"      [2020-10-31 Sat 18:48] \\
+   That was done a long time ago.
+-  State "MAYBE"      from              [2019-10-07 Mon 13:19]
+:END:
+
+As mentioned [[https://lists.gnu.org/archive/html/emacs-orgmode/2019-10/msg00050.html][here]].
 
 ** DONE Use library for window management
 CLOSED: [2018-08-01 Wed 10:11]
