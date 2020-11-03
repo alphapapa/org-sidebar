@@ -279,8 +279,11 @@ buffers."
   (save-window-excursion
     (--each (buffer-local-value 'org-sidebar-sidebar-buffers org-sidebar-source-buffer)
       (with-current-buffer it
-        (org-ql-view-refresh)
-        (org-sidebar--prepare-buffer)))))
+        (let ((old-buffer-name (buffer-name)))
+          (org-ql-view-refresh)
+          ;; Restore buffer name (because `org-ql-view-refresh' changes it).
+          (rename-buffer old-buffer-name)
+          (org-sidebar--prepare-buffer))))))
 
 ;;;; Functions
 
