@@ -156,6 +156,9 @@ Show sidebar with entries that link to the current entry.  The entry must have a
 *Fixes*
 +  =TAB= binding in =org-sidebar-tree-map=.
 
+*Thanks*
++ [[https://github.com/darioceccoli][Dario Ceccoli]] and [[https://github.com/egh][Erik Hetzner]] ([[https://github.com/alphapapa/org-sidebar/issues/26][#26]], [[https://github.com/alphapapa/org-sidebar/pull/35][#35]]).
+
 ** 0.3.2
 
 *Fixed*
