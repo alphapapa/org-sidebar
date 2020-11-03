@@ -9,8 +9,10 @@
 -  State "UNDERWAY"   from "TODO"       [2020-11-02 Mon 20:56]
 :END:
 
-*** UNDERWAY Bookmark query sidebars
+*** DONE Bookmark query sidebars
+CLOSED: [2020-11-02 Mon 22:17]
 :LOGBOOK:
+-  State "DONE"       from "UNDERWAY"   [2020-11-02 Mon 22:17]
 -  State "UNDERWAY"   from "TODO"       [2020-11-02 Mon 20:56]
 :END:
 
@@ -23,7 +25,11 @@ However:
 
 So in =org-sidebar= I need to:
 
-+ [ ] Change the =source-buffer= to =source-file=, or something like that.
++  [-] Change the =source-buffer= to =source-file=, or something like that.
+
+[2020-11-02 Mon 22:13]  I changed =org-ql-view--bookmark-make-record= so it replaces buffers with their filenames.  And I changed =org-sidebar= to set =mode-line-format= as a window parameter instead of a buffer-local variable.  And I changed Burly to save and restore that window parameter.  So this all seems to work now.  Making changes across 3 packages to do this is relatively easy when they're all my own packages, but it involves a lot of jumping around.
+
+I think that making the tree sidebar bookmarkable will be easier...I /think/...
 
 *** TODO Bookmark tree sidebar
 
