@@ -4,9 +4,26 @@
 
 ** TODO [#A] [[https://github.com/alphapapa/org-sidebar/pull/35][Fix issue #26: `org-sidebar-refresh` by egh · Pull Request #35 · alphapapa/org-sidebar · GitHub]]
 
-** TODO [#A] Bookmark support
+** UNDERWAY [#A] Bookmark support
+:LOGBOOK:
+-  State "UNDERWAY"   from "TODO"       [2020-11-02 Mon 20:56]
+:END:
 
-*** TODO Bookmark query sidebars
+*** UNDERWAY Bookmark query sidebars
+:LOGBOOK:
+-  State "UNDERWAY"   from "TODO"       [2020-11-02 Mon 20:56]
+:END:
+
+[2020-11-02 Mon 20:52]  I just added some bookmark support to =org-ql-view= in the =wip/bookmarks= branch, but then I realized that in [[file:org-sidebar.el::(defun%20org-sidebar%20(fns)][(defun org-sidebar ...)]], ~source-buffer~ is set to the current /buffer/, not its /filename/, so the variable =org-ql-view-buffers-files= is set to the /buffer/, not its /filename/, so that variable in the bookmark gets set to the buffer, not the filename, which makes the bookmark fail to restore properly.  So the buffer's filename needs to be used instead of the buffer itself.  
+
+However:
+
+1.  In the (probably very rare) case of using the sidebar on a non-file-backed buffer, it won't restore properly.  But I think that's not a big deal, because non-file-backed buffers can't be restored by bookmarks anyway if they don't exist anymore.
+2.  In the case of a file-backed, narrowed buffer (and probably also in the case of an indirect buffer backed by a file-backed buffer), the narrowing and indirectness might need to be handled specially.  But I'm not sure if that's practical, because saving and restoring narrowing would also require, e.g. saving the outline path and finding it again, which isn't perfect (e.g. when a heading contains a link, it breaks, cf. [[https://github.com/alphapapa/burly.el/issues/10][Burly #10]]).
+
+So in =org-sidebar= I need to:
+
++ [ ] Change the =source-buffer= to =source-file=, or something like that.
 
 *** TODO Bookmark tree sidebar
 
