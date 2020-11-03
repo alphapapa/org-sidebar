@@ -145,9 +145,13 @@ Show sidebar with entries that link to the current entry.  The entry must have a
 
 ** 0.4-pre
 
+*Additions*
++  Option =org-sidebar-window-after-display-hook=.
+
 *Changes*
 +  Use =org-ql-view= for sidebar buffers instead of bespoke implementation.
 +  =org-sidebar= now accepts only a =FNS= argument, and sidebars are not defined with structs.  Some functionality may have been temporarily lost due to this refactoring.  Users may wish to use version 0.3 until it is restored.
++  Set =mode-line-format= as a window parameter in sidebar windows rather than setting the buffer-local variable in sidebar buffers.
 
 *Fixes*
 +  =TAB= binding in =org-sidebar-tree-map=.

@@ -139,12 +139,18 @@ text properties to act on items."
                          (function :tag "Other function"))))
 
 (defcustom org-ql-sidebar-buffer-setup-hook
-  '(toggle-truncate-lines
-    (lambda ()
-      "Set `mode-line-format' to nil."
-      (setf mode-line-format nil)))
+  ;; FIXME: Rename this variable (remove "ql").
+  '(toggle-truncate-lines)
   "Functions run in sidebar buffers before display.
 Each function is run without arguments in each buffer."
+  :type 'hook)
+
+(defcustom org-sidebar-window-after-display-hook
+  '((lambda ()
+      "Set window-parameter `mode-line-format' to nil."
+      (set-window-parameter nil 'mode-line-format 'none)))
+  "Functions run in sidebar windows after display.
+Each function is run without arguments in each window."
   :type 'hook)
 
 ;;;; Commands
@@ -292,11 +298,13 @@ WINDOW-PARAMETERS are applied to each window that is displayed."
         (window-parameters (append (list (cons 'no-delete-other-windows t))
                                    window-parameters)))
     (--each buffers
-      (display-buffer-in-side-window
-       it
-       (list (cons 'side org-sidebar-side)
-             (cons 'slot slot)
-             (cons 'window-parameters window-parameters)))
+      (when-let* ((window (display-buffer-in-side-window
+                           it
+                           (list (cons 'side org-sidebar-side)
+                                 (cons 'slot slot)
+                                 (cons 'window-parameters window-parameters)))))
+        (with-selected-window window
+          (run-hooks 'org-sidebar-window-after-display-hook)))
       (cl-incf slot))))
 
 (defun org-sidebar--prepare-buffer ()
