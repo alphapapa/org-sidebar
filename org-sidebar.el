@@ -355,7 +355,7 @@ This is not used for `org-sidebar-tree' buffers."
         '(and (todo)
               (not (or (scheduled)
                        (deadline))))
-        :narrow t :sort 'date
+        :narrow t :sort '(priority date)
         :super-groups '((:auto-todo))
         :buffer display-buffer
         :title title))
