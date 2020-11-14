@@ -129,7 +129,7 @@ Especially for tasks.  It would be good to have a generalized implementation for
 
 e.g. changing TODO keyword, etc.  It would be good to reuse as much Org Agenda functionality as possible, but since they aren't actual agenda buffers (and since I think Org only allows one actual Agenda buffer), that may not be possible.
 
-** MAYBE Use font-locking to hide non-heading text in tree buffer
+** MAYBE [#A] Use font-locking to hide non-heading text in tree buffer
 
 Suggested by =itistheblurstoftimes= [[https://www.reddit.com/r/orgmode/comments/dbsngi/finally_solving_the_lack_of_a_treeview_navigation/f3x80qa/][here]]:
 
