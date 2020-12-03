@@ -145,6 +145,8 @@ What about using font lock on the tree buffer? This is buggy, but seems promisin
 (font-lock-add-keywords nil org-sidebar-tree--hide-body-keyword)
 #+END_QUOTE
 
+[2020-12-03 Thu 15:14]  He [[https://www.reddit.com/r/emacs/comments/k63ry6/wiprfc_orgmode_visual_outline_hierarchy/][posted]] a [[https://github.com/legalnonsense/org-visual-outline][new package]] which seems to attempt to solve this problem.  Looks like he might have done it!
+
 ** DONE [#A] Use ~org-ql-agenda~
 CLOSED: [2020-03-11 Wed 15:59]
 :LOGBOOK:
