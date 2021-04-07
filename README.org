@@ -7,7 +7,7 @@
 
 This package presents helpful sidebars for Org buffers.  Sidebars are customizable using [[https://github.com/alphapapa/org-ql][org-ql]] queries and [[https://github.com/alphapapa/org-super-agenda][org-super-agenda]] grouping.
 
-The default sidebar includes a chronological list of scheduled and deadlined items in the current buffer (similar to the Org agenda ,but without all its features) at the top, and a list of all other non-done to-do items below.  If the buffer is narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of tasks in a subtree.
+The default sidebar includes a chronological list of scheduled and deadlined items in the current buffer (similar to the Org agenda, but without all its features) at the top, and a list of all other non-done to-do items below.  If the buffer is narrowed, the sidebar only shows items in the narrowed portion; this allows seeing an overview of tasks in a subtree.
 
 [[images/screenshot.png]]
 
