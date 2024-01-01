@@ -143,7 +143,7 @@ Show sidebar with entries that link to the current entry.  The entry must have a
 :TOC:      0
 :END:
 
-** 0.4-pre
+** 0.4
 
 *Additions*
 +  Option =org-sidebar-window-after-display-hook=.
