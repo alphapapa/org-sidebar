@@ -145,7 +145,7 @@ Show sidebar with entries that link to the current entry.  The entry must have a
 
 ** 0.5-pre
 
-Nothing new yet.
+Org v9.6 or later is now required.
 
 ** 0.4
 

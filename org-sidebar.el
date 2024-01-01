@@ -3,7 +3,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/org-sidebar
 ;; Version: 0.5-pre
-;; Package-Requires: ((emacs "26.1") (s "1.10.0") (dash "2.18") (org "9.0") (org-ql "0.2") (org-super-agenda "1.0"))
+;; Package-Requires: ((emacs "26.1") (compat "29.1") (s "1.10.0") (dash "2.18") (org "9.6") (org-ql "0.2") (org-super-agenda "1.0"))
 ;; Keywords: hypermedia, outlines, Org, agenda
 
 ;;; Commentary:
@@ -61,6 +61,8 @@
 ;;; Code:
 
 ;;;; Requirements
+
+(require 'compat)
 
 (require 'org)
 (require 'org-element)
@@ -342,7 +344,8 @@ This is not used for `org-sidebar-tree' buffers."
     display-buffer))
 
 (defun org-sidebar--todo-items (source-buffer)
-  "Return an Org QL View buffer showing unscheduled, un-deadlined items in SOURCE-BUFFER."
+  "Return an Org QL View buffer for SOURCE-BUFFER.
+Shows unscheduled, un-deadlined items in it."
   (let ((display-buffer
          (generate-new-buffer (format "org-sidebar<%s>" (buffer-name source-buffer))))
         (title (propertize (concat "To-do items in: " (buffer-name source-buffer))
@@ -462,7 +465,7 @@ it.  Otherwise, show it for current buffer."
               (outline-next-heading)
               (setf min (point)))
           ;; Tree view only shows one subtree: expand its branches.
-          (outline-show-branches)))
+          (org-fold-show-branches)))
       (narrow-to-region min max)
       (save-excursion
         ;; Hide visible entry bodies.
@@ -560,10 +563,10 @@ child entries.  Should be called from a tree-view buffer."
                      (cons 'display-buffer-use-some-window
                            (list (cons 'inhibit-same-window t)))))
     (goto-char pos)
-    (org-show-entry)
-    (org-show-children)
+    (org-fold-show-entry)
+    (org-fold-show-children)
     (when children
-      (org-show-subtree))))
+      (org-fold-show-subtree))))
 
 (defun org-sidebar-tree-cycle ()
   "Cycle visibility of heading at point and its descendants.
@@ -576,7 +579,7 @@ descendants, show them.  Otherwise, hide the subtree."
   (interactive)
   (cond ((org-sidebar--children-p 'invisible)
          ;; Has invisible children: show children.
-         (outline-show-children))
+         (org-fold-show-children))
         ((and (eq last-command this-command)
               (save-excursion
                 (save-restriction
@@ -584,9 +587,9 @@ descendants, show them.  Otherwise, hide the subtree."
                   (cl-loop while (outline-next-heading)
                            thereis (outline-invisible-p)))))
          ;; This was last command and has invisible descendants: show branches.
-         (outline-show-branches))
+         (org-fold-show-branches))
         (t ;; Nothing more to expand: hide tree.
-         (outline-hide-subtree))))
+         (org-fold-hide-subtree))))
 
 (defun org-sidebar-tree-cycle-global ()
   "Cycle global visiblity.
@@ -600,7 +603,7 @@ bodies."
               (goto-char (point-min))
               (when (org-before-first-heading-p)
                 (outline-next-heading))
-              (cl-loop when (outline-invisible-p)
+              (cl-loop when (org-invisible-p)
                        return (org-current-level)
                        while (outline-next-heading)))))
          (regexp (rx-to-string `(seq bol (repeat ,(or highest-invisible-heading-level 1) "*") (1+ blank)))))
@@ -611,14 +614,14 @@ bodies."
           (cl-loop while (re-search-forward regexp nil t)
                    do (progn
                         (org-up-heading-safe)
-                        (outline-show-children)
+                        (org-fold-show-children)
                         (org-end-of-subtree))))
       ;; All headings visible: Hide all.
       (save-excursion
         (goto-char (point-min))
         (when (org-before-first-heading-p)
           (outline-next-heading))
-        (cl-loop do (outline-hide-subtree)
+        (cl-loop do (org-fold-hide-subtree)
                  while (re-search-forward regexp nil t))))))
 
 (defun org-sidebar-tree-cycle-mouse (event)
@@ -642,7 +645,7 @@ CHILDREN is non-nil, also show children."
                    _object text-pos . _) position))
     (with-selected-window window
       (goto-char text-pos)
-      (goto-char (point-at-bol))
+      (goto-char (pos-bol))
       (if (org-before-first-heading-p)
           (org-sidebar-tree-jump-source)
         (funcall org-sidebar-tree-jump-fn :children children)))))
@@ -690,13 +693,13 @@ indirect buffer.  If `branches', show all descendant headings.  If
                  (org-entry-end-position))))
      (with-current-buffer new-buffer
        (goto-char pos)
-       (org-show-entry)
+       (org-fold-show-entry)
        (pcase-exhaustive children
-         ('branches (outline-show-branches))
-         ('children (org-show-children))
+         ('branches (org-fold-show-branches))
+         ('children (org-fold-show-children))
          ('entries (org-sidebar-show-subtree-entries))
          ('nil nil)
-         (_ (org-show-children)))
+         (_ (org-fold-show-children)))
        (narrow-to-region beg end)
        (current-buffer)))))
 
@@ -709,17 +712,17 @@ descendants."
   (save-excursion
     (let ((level (funcall outline-level)))
       (outline-next-heading)
-      (and (org-at-heading-p t)
+      (and (org-at-heading-p)
            (> (funcall outline-level) level)
            (or (not invisible)
-               (outline-invisible-p))))))
+               (org-invisible-p))))))
 
 (defun org-sidebar-show-subtree-entries ()
-  "Like `org-show-subtree', but only expands entry text.
-Unlike `org-show-subtree', does not expand drawers."
+  "Like `org-fold-show-subtree', but only expands entry text.
+Unlike `org-fold-show-subtree', does not expand drawers."
   ;; TODO: Should we use `org-cycle-hide-drawers' instead?
   (save-excursion
-    (cl-loop do (org-show-entry)
+    (cl-loop do (org-fold-show-entry)
              while (outline-next-heading))))
 
 ;;;; Footer
