@@ -256,6 +256,7 @@ entries that have both ID and CUSTOM_ID properties set is much
 slower than searching for links to entries with just one of those
 properties."
   (interactive)
+  (require 'org-ql-search)
   (let* ((id (org-entry-get (point) "ID"))
          (custom-id (org-entry-get (point) "CUSTOM_ID"))
          ;; FIXME: Do CUSTOM_ID links also have an "id:" prefix?
