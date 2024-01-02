@@ -368,6 +368,66 @@ Shows unscheduled, un-deadlined items in it."
 
 ;; TODO: Prevent self-insert-command in tree buffer, at least optionally.
 
+(defvar-local org-sidebar-tree-overlays nil)
+
+(defvar org-sidebar-tree-font-lock-keywords
+  '((;; MATCHER
+     org-sidebar-tree-matcher
+     ;; HIGHLIGHTERS
+     (0 ;; SUBEXP
+      ;; FACESPEC
+      (progn
+        (if-let ((overlays (overlays-in (match-beginning 0) (match-end 0)))
+                 (ours (cl-find-if (lambda (ov)
+                                     (overlay-get ov :org-sidebar))
+                                   overlays)))
+            
+            (progn
+              (message "org-sidebar-tree-font-lock-keywords: MOVING OVERLAY:%S  TO:%S-%S"
+                       ours (match-beginning 0) (match-end 0))
+              (move-overlay ours (match-beginning 0) (match-end 0)))
+          (let ((overlay (make-overlay (match-beginning 0) (match-end 0))))
+            (message "org-sidebar-tree-font-lock-keywords: NEW OVERLAY:%S  TO:%S-%S"
+                     ours (match-beginning 0) (match-end 0))
+            (overlay-put overlay :org-sidebar t)
+            (overlay-put overlay 'invisible t)
+            (push overlay org-sidebar-tree-overlays)))
+        ;; Return nil. (?)
+        nil))))
+  ;; TODO: Add `invisible' to `font-lock-extra-managed-props'?
+  "Font-lock keywords used in `org-sidebar-tree'.")
+
+(defun org-sidebar-tree-matcher (limit)
+  (message "org-sidebar-tree-matcher: POINT:%S  LIMIT:%S" (point) limit)
+  (let (beg end)
+    (while (and (org-at-heading-p)
+                (not (eobp)))
+      (forward-line 1))
+    (setf beg (point))
+    (outline-next-heading)
+    (setf end (if (looking-back (rx "\n"))
+                  ;; Don't make newline invisible.
+                  (1- (point))
+                (point)))
+    (when (> end limit)
+      (setf end limit))
+    (message "org-sidebar-tree-matcher: RETURNING:%S" (list beg end))
+    (set-match-data (list beg end))
+    t))
+
+(define-minor-mode org-sidebar-tree-mode
+  "FIXME: Docstring."
+  :lighter " Tree"
+  (if org-sidebar-tree-mode
+      (progn
+        (font-lock-add-keywords nil org-sidebar-tree-font-lock-keywords 'append)
+        (font-lock-flush))
+    ;; Disable mode.
+    (font-lock-remove-keywords nil org-sidebar-tree-font-lock-keywords)
+    (mapc #'delete-overlay org-sidebar-tree-overlays)
+    (setf org-sidebar-tree-overlaysp nil)
+    (font-lock-flush)))
+
 (defvar org-sidebar-tree-map
   (let ((map (make-sparse-keymap))
         (mappings '("<return>" org-sidebar-tree-jump
@@ -451,7 +511,7 @@ it.  Otherwise, show it for current buffer."
           (kill-buffer existing-buffer)
         ;; Buffer is not indirect: something is probably wrong, so warn.
         (warn "Existing tree buffer that is not indirect: %s" existing-buffer)))
-    (setf tree-buffer (clone-indirect-buffer buffer-name nil 'norecord))
+    (setf tree-buffer (make-indirect-buffer (current-buffer) buffer-name 'clone))
     (with-current-buffer tree-buffer
       (use-local-map org-sidebar-tree-map)
       (setf mode-line-format nil
